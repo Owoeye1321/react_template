@@ -27,9 +27,10 @@ import numeral from "numeral";
 import { UserListHead } from "../sections/@dashboard/user";
 import SvgColor from "../components/svg-color";
 import { useContexts } from "../context";
-import { create_assessment } from "../utils/api";
+import { create_single_user, create_bulk_user } from "../utils/api";
 
 export default function UserPage() {
+  const { set_loading } = useContexts();
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
@@ -51,7 +52,7 @@ export default function UserPage() {
     { id: "designation", label: "Designation", alignRight: false },
   ];
 
-  const [data, setData] = useState({
+  const [data, setData] = useState<any>({
     first_name: "",
     last_name: "",
     email: "",
@@ -80,12 +81,11 @@ export default function UserPage() {
     if (e.target.files) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const data = e.target.result;
+        const data = e.target?.result;
         const workbook = xlsx.read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const json = xlsx.utils.sheet_to_json(worksheet);
-        console.log(json);
+        const json: any = xlsx.utils.sheet_to_json(worksheet);
         setCandidates(json);
       };
       reader.readAsArrayBuffer(e.target.files[0]);
@@ -95,14 +95,26 @@ export default function UserPage() {
   const handleSubmit = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       e.preventDefault();
-      if (data.optionSchedule === null && data.essaySchedule === null) {
-        return alert("Please upload an objective sheet or theory");
-      }
       await set_loading(true);
-      const done = await create_assessment(data);
+      const done = await create_single_user({ ...data, role: "user" });
       if (done) {
-        alert("Assessment created");
+        alert("User created");
         defaultState();
+      }
+      await set_loading(false);
+    } catch (error) {
+      alert("An error occured");
+    }
+  };
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement> | any) => {
+    try {
+      e.preventDefault();
+      await set_loading(true);
+      const done = await create_bulk_user({ file: selectedFile });
+      if (done) {
+        alert("File uploaded");
+        cancelUpload();
       }
       await set_loading(false);
     } catch (error) {
@@ -134,11 +146,11 @@ export default function UserPage() {
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - candidates.length) : 0;
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (event: React.SyntheticEvent | any, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const handleChangeRowsPerPage = (event: any) => {
     setPage(0);
     setRowsPerPage(parseInt(event.target.value, 10));
   };
@@ -263,13 +275,7 @@ export default function UserPage() {
                           extractCandidateData(e);
                         }}
                       />
-                      <Box
-                        item
-                        xs={12}
-                        sm={6}
-                        md={5}
-                        sx={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}
-                      >
+                      <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
                         <InputLabel
                           component="button"
                           sx={{
@@ -309,17 +315,19 @@ export default function UserPage() {
                             numSelected={selected.length}
                           />
                           <TableBody>
-                            {candidates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
-                              // const selectedUser = selected.indexOf(_id) !== -1;
+                            {candidates
+                              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                              .map((row: any, idx) => (
+                                // const selectedUser = selected.indexOf(_id) !== -1;
 
-                              <TableRow hover key={idx} tabIndex={-1} role="checkbox">
-                                <TableCell align="left">{`${row["FIRST NAME"]} ${row["LAST NAME"]}`}</TableCell>
+                                <TableRow hover key={idx} tabIndex={-1} role="checkbox">
+                                  <TableCell align="left">{`${row["FIRST NAME"]} ${row["LAST NAME"]}`}</TableCell>
 
-                                <TableCell align="left">{row.EMAIL}</TableCell>
+                                  <TableCell align="left">{row.EMAIL}</TableCell>
 
-                                <TableCell align="left">{row.DESIGNATION}</TableCell>
-                              </TableRow>
-                            ))}
+                                  <TableCell align="left">{row.DESIGNATION}</TableCell>
+                                </TableRow>
+                              ))}
                             {emptyRows > 0 && (
                               <TableRow style={{ height: 53 * emptyRows }}>
                                 <TableCell colSpan={6} />
@@ -329,14 +337,8 @@ export default function UserPage() {
                         </Table>
                       </TableContainer>
                     </Box>
-                    <Box
-                      item
-                      xs={12}
-                      sm={6}
-                      md={5}
-                      sx={{ display: "flex", justifyContent: "space-between", margin: "15px" }}
-                    >
-                      <Button variant="contained">
+                    <Box sx={{ display: "flex", justifyContent: "space-between", margin: "15px" }}>
+                      <Button variant="contained" onClick={handleBulkUpload}>
                         Upload file{" "}
                         <Icon style={{ marginLeft: "10px" }} icon="material-symbols:upload" fontSize="20px" />
                       </Button>

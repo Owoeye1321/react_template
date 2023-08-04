@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { filter, isArray } from 'lodash';
-import { sentenceCase } from 'change-case';
+import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { filter, isArray } from "lodash";
+import { sentenceCase } from "change-case";
 // @mui
 import {
   Card,
@@ -21,32 +21,32 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
-} from '@mui/material';
+} from "@mui/material";
 // components
-import { useNavigate } from 'react-router-dom';
-import Label from '../components/label';
-import Iconify from '../components/iconify';
-import Scrollbar from '../components/scrollbar';
-import { useContexts } from '../context';
+import { useNavigate } from "react-router-dom";
+import Label from "../components/label";
+import Iconify from "../components/iconify";
+import Scrollbar from "../components/scrollbar";
+import { useContexts } from "../context";
 // sections
-import { UserListHead, UserListToolbar, AssessmentListToolbar } from '../sections/@dashboard/user';
-import { get_assessments } from '../utils/api';
+import { UserListHead, UserListToolbar, AssessmentListToolbar } from "../sections/@dashboard/user";
+import { get_result } from "../utils/api";
 // mock
-import USERLIST from '../_mock/user';
+import USERLIST from "../_mock/user";
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'title', label: 'Title', alignRight: false },
-  { id: 'mode', label: 'Mode', alignRight: false },
-  { id: 'designation', label: 'Designation', alignRight: false },
-  { id: 'role', label: 'Role', alignRight: false },
-  { id: '' },
+  { id: "title", label: "Title", alignRight: false },
+  { id: "objective_score", label: "Objective Score", alignRight: false },
+  { id: "essay_score", label: "Essay Score", alignRight: false },
+  { id: "total_score", label: "Total Score", alignRight: false },
+  { id: "" },
 ];
 
 // ----------------------------------------------------------------------
 
-function descendingComparator(a, b, orderBy) {
+function descendingComparator(a: any, b: any, orderBy: any) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -56,15 +56,15 @@ function descendingComparator(a, b, orderBy) {
   return 0;
 }
 
-function getComparator(order, orderBy) {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
+function getComparator(order: any, orderBy: any) {
+  return order === "desc"
+    ? (a: any, b: any) => descendingComparator(a, b, orderBy)
+    : (a: any, b: any) => -descendingComparator(a, b, orderBy);
 }
 
-function applySortFilter(array, comparator, query) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
-  stabilizedThis.sort((a, b) => {
+function applySortFilter(array: any, comparator: any, query: any) {
+  const stabilizedThis = array.map((el: any, index: any) => [el, index]);
+  stabilizedThis.sort((a: any, b: any) => {
     const order = comparator(a[0], b[0]);
     if (order !== 0) return order;
     return a[1] - b[1];
@@ -77,7 +77,7 @@ function applySortFilter(array, comparator, query) {
         _user.designation.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   }
-  return stabilizedThis.map((el) => el[0]);
+  return stabilizedThis.map((el: any) => el[0]);
 }
 
 export default function UserPage() {
@@ -85,22 +85,22 @@ export default function UserPage() {
 
   const [page, setPage] = useState(0);
 
-  const [order, setOrder] = useState('asc');
+  const [order, setOrder] = useState("asc");
 
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState<any>([]);
 
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState("name");
 
-  const [filterName, setFilterName] = useState('');
+  const [filterName, setFilterName] = useState("");
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [assessment, set_assessment] = useState([]);
+  const [assessment, set_assessment] = useState<any>([]);
   const { set_loading } = useContexts();
   const navigate = useNavigate();
 
   const loadData = async () => {
     await set_loading(true);
-    const data = await get_assessments();
+    const data = await get_result();
     if (isArray(data)) {
       await set_assessment(data);
     }
@@ -110,7 +110,7 @@ export default function UserPage() {
     loadData();
   }, []);
 
-  const handleOpenMenu = (event) => {
+  const handleOpenMenu = (event: any) => {
     setOpen(event.currentTarget);
   };
 
@@ -118,15 +118,15 @@ export default function UserPage() {
     setOpen(null);
   };
 
-  const handleRequestSort = (event, property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+  const handleRequestSort = (event: any, property: any) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event) => {
+  const handleSelectAllClick = (event: any) => {
     if (event.target.checked) {
-      const newSelecteds = assessment.map((n) => n.name);
+      const newSelecteds = assessment.map((n: any) => n.name);
       setSelected(newSelecteds);
       return;
     }
@@ -148,16 +148,16 @@ export default function UserPage() {
     setSelected(newSelected);
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (event: any, newPage: any) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const handleChangeRowsPerPage = (event: any) => {
     setPage(0);
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleFilterByName = (event) => {
+  const handleFilterByName = (event: any) => {
     setPage(0);
     setFilterName(event.target.value);
   };
@@ -174,7 +174,7 @@ export default function UserPage() {
         <title> Results </title>
       </Helmet>
 
-      <Container sx={{ minHeight: '100vh', height: '100%' }}>
+      <Container sx={{ minHeight: "100vh", height: "100%" }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
             Results
@@ -202,8 +202,8 @@ export default function UserPage() {
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { _id, designation, mode, title, role } = row;
+                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: any) => {
+                    const { _id, essay_score, objective_score, title, total_score } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
 
                     return (
@@ -214,10 +214,10 @@ export default function UserPage() {
 
                         <TableCell align="left">{title}</TableCell>
 
-                        <TableCell align="left">{mode}</TableCell>
+                        <TableCell align="left">{objective_score}</TableCell>
 
-                        <TableCell align="left">{designation}</TableCell>
-                        <TableCell align="left">{role}</TableCell>
+                        <TableCell align="left">{essay_score}</TableCell>
+                        <TableCell align="left">{total_score}</TableCell>
 
                         <TableCell align="right">
                           <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
@@ -240,7 +240,7 @@ export default function UserPage() {
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
                         <Paper
                           sx={{
-                            textAlign: 'center',
+                            textAlign: "center",
                           }}
                         >
                           <Typography variant="h6" paragraph>
@@ -282,15 +282,15 @@ export default function UserPage() {
         open={Boolean(open)}
         anchorEl={open}
         onClose={handleCloseMenu}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{
           sx: {
             p: 1,
             width: 140,
-            '& .MuiMenuItem-root': {
+            "& .MuiMenuItem-root": {
               px: 1,
-              typography: 'body2',
+              typography: "body2",
               borderRadius: 0.75,
             },
           },
@@ -301,7 +301,7 @@ export default function UserPage() {
           Edit
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem sx={{ color: "error.main" }}>
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
           Delete
         </MenuItem>

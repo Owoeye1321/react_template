@@ -4,6 +4,7 @@ import { NavLink as RouterLink } from "react-router-dom";
 import { Box, List, ListItemText } from "@mui/material";
 //
 import { StyledNavItem, StyledNavItemIcon } from "./styles";
+import { useContexts } from "../../context";
 
 // ----------------------------------------------------------------------
 
@@ -12,12 +13,15 @@ NavSection.propTypes = {
 };
 
 export default function NavSection({ data, ...other }: any) {
+  const {
+    state: { user },
+  } = useContexts();
   return (
     <Box {...other}>
       <List disablePadding sx={{ p: 1 }}>
-        {data.map((item: any) => (
-          <NavItem key={item.title} item={item} />
-        ))}
+        {data.map((item: any) => {
+          return <NavItem key={item.title} item={item} />;
+        })}
       </List>
     </Box>
   );

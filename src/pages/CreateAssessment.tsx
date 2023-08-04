@@ -157,7 +157,7 @@ export default function UserPage() {
       >
         <Avatar src="/assets/icons/ic_back.svg" alt="photoURL" />
       </Box>
-      <Container maxWidth="xl" component="form" onSubmit={handleSubmit}>
+      <Box maxWidth="xl" component="form" onSubmit={handleSubmit} margin={2}>
         <Typography variant="h4" sx={{ mb: 5 }}>
           Create Assessment
         </Typography>
@@ -177,7 +177,7 @@ export default function UserPage() {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="start">
-                    Seconds {data.time_limit && `(${numeral(parseFloat(data.time_limit)).format(":")} ` + "Hour(s))"}
+                    {data.time_limit && `(${numeral(parseFloat(data.time_limit)).format(":")} ` + "Hour(s))"}
                   </InputAdornment>
                 ),
               }}
@@ -185,7 +185,7 @@ export default function UserPage() {
               type="number"
               value={data.time_limit}
               name="timeLimit"
-              label="Time limit"
+              label="Time limit(Seconds)"
               required
               onChange={(e) => onChange(e.target.value, "time_limit")}
             />
@@ -284,7 +284,7 @@ export default function UserPage() {
             Save Assessment
           </Button>
         </Box>
-      </Container>
+      </Box>
       <Modal
         open={openObjective}
         onClose={() => {}}
@@ -333,6 +333,7 @@ export default function UserPage() {
                     margin: "15px",
                     backgroundColor: "#fff",
                     borderRadius: "5px",
+                    border: 1,
                   }}
                   key={idx}
                   item
@@ -340,7 +341,7 @@ export default function UserPage() {
                   sm={5.5}
                   md={5.5}
                 >
-                  <Typography id="modal-modal-description">Question {idx + 1}</Typography>
+                  <Typography id="modal-modal-description">Question {idx + 1}:</Typography>
                   <Typography id="modal-modal-description" variant="h6">
                     {i.QUESTION}
                   </Typography>
@@ -404,6 +405,7 @@ export default function UserPage() {
                     margin: "15px",
                     backgroundColor: "#fff",
                     borderRadius: "5px",
+                    border: 1,
                   }}
                   key={idx}
                   item
@@ -411,7 +413,7 @@ export default function UserPage() {
                   sm={5.5}
                   md={5.5}
                 >
-                  <Typography id="modal-modal-description">Question {idx + 1}</Typography>
+                  <Typography id="modal-modal-description">Question {idx + 1}:</Typography>
                   <Typography id="modal-modal-description" variant="h6">
                     {i.QUESTION}
                   </Typography>

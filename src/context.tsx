@@ -1,11 +1,11 @@
-import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { login, verifyToken, forgot_password } from './utils/api';
+import { createContext, useContext, useEffect, useReducer, useState } from "react";
+import { login, verifyToken, forgot_password } from "./utils/api";
 
 export enum Types {
-  set_app_loaded = 'SET_APP_LOADED',
-  set_user = 'SET_USER',
-  set_is_auth = 'SET_IS_AUTH',
-  set_loading = 'SET_LOADING',
+  set_app_loaded = "SET_APP_LOADED",
+  set_user = "SET_USER",
+  set_is_auth = "SET_IS_AUTH",
+  set_loading = "SET_LOADING",
 }
 
 type InitialStateType = {
@@ -64,11 +64,12 @@ export function ContextProvider({ children }: any) {
   const [loaded, set_loaded] = useState(true);
 
   const check_login = async () => {
+    if (!localStorage.getItem("zer")) return;
     const user = await verifyToken();
     await set_loaded(false);
     if (user && user.response && user.response.status === 401) {
       await dispatch({ type: Types.set_is_auth, payload: false });
-    } else if (user && user.code !== 'ERR_NETWORK' && user.name !== 'AxiosError') {
+    } else if (user && user.code !== "ERR_NETWORK" && user.name !== "AxiosError") {
       await dispatch({ type: Types.set_user, payload: user });
       await dispatch({ type: Types.set_is_auth, payload: true });
     } else {
@@ -112,7 +113,7 @@ export function ContextProvider({ children }: any) {
     if (e) {
       e.preventDefault();
     }
-    await localStorage.removeItem('zer');
+    await localStorage.removeItem("zer");
     await dispatch({ type: Types.set_is_auth, payload: false });
     /* await router.push({ pathname: "/login" }, undefined, {
        shallow: true,
@@ -130,10 +131,10 @@ export function ContextProvider({ children }: any) {
       if (user && user.response && user.response.status === 401) {
         await dispatch({ type: Types.set_is_auth, payload: false });
         // notify("error", "Incorrect Email/Password");
-      } else if (user && user.code !== 'ERR_NETWORK' && user.name !== 'AxiosError') {
+      } else if (user && user.code !== "ERR_NETWORK" && user.name !== "AxiosError") {
         await dispatch({ type: Types.set_user, payload: user });
         await dispatch({ type: Types.set_is_auth, payload: true });
-        return true;
+        return { login: true, role: user.role };
       } else {
         await dispatch({ type: Types.set_is_auth, payload: false });
       }
@@ -142,7 +143,7 @@ export function ContextProvider({ children }: any) {
   };
 
   const registerUser = () => {
-    console.log('done');
+    console.log("done");
   };
 
   const notify = (data: string) => {

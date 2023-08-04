@@ -156,7 +156,7 @@ export default function UserPage() {
   return (
     <>
       <Helmet>
-        <title> Candidates </title>
+        <title> Users </title>
       </Helmet>
 
       <Container sx={{ minHeight: "100vh", height: "100%" }}>
@@ -166,7 +166,7 @@ export default function UserPage() {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => navigate("/candidates/create")}
+            onClick={() => navigate("/user/create")}
             startIcon={<Iconify icon="eva:plus-fill" />}
           >
             New Member

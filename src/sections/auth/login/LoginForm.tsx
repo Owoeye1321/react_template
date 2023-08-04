@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 // @mui
-import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
-import { useContexts } from '../../../context';
+import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
+import { useContexts } from "../../../context";
 // components
-import Iconify from '../../../components/iconify';
+import Iconify from "../../../components/iconify";
 
 // ----------------------------------------------------------------------
 
@@ -19,14 +19,16 @@ export default function LoginForm() {
     state: { loading },
     set_loading,
   } = useContexts();
-  const [data, setData] = useState({ email: '', password: '' });
+  const [data, setData] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e: any) => {
     try {
       e.preventDefault();
       const user = await loginUser(data);
-      if (user) {
-        await navigate('/dashboard');
+      if (user.login && user.role === "admin") {
+        await navigate("/dashboard");
+      } else {
+        await navigate("/candidate/assessments");
       }
       await set_loading(false);
     } catch (error) {
@@ -52,12 +54,12 @@ export default function LoginForm() {
           required
           value={data.password}
           onChange={(e) => setData({ ...data, password: e.target.value })}
-          type={showPassword ? 'text' : 'password'}
+          type={showPassword ? "text" : "password"}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
+                  <Iconify icon={showPassword ? "eva:eye-fill" : "eva:eye-off-fill"} />
                 </IconButton>
               </InputAdornment>
             ),

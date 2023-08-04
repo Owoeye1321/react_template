@@ -76,7 +76,14 @@ export default function Nav({ openNav, onCloseNav }: any) {
         </Link>
       </Box>
 
-      <NavSection data={navConfig} />
+      <NavSection
+        data={navConfig.filter(
+          (i) =>
+            (i.isAdmin && user.role === "admin") ||
+            (user.role === "guest" && !i.isAdmin) ||
+            (user.role === "user" && !i.isAdmin)
+        )}
+      />
 
       <Box sx={{ flexGrow: 1 }} />
     </Scrollbar>

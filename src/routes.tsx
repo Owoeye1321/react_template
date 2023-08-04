@@ -12,7 +12,9 @@ import CreateStaff from "./pages/CreateStaff";
 import Candidates from "./pages/Candidates";
 import Results from "./pages/Result";
 import Staffs from "./pages/Staff";
-import { ProtectedRoute } from "./protectedRoute";
+import CandidateStaff from "./pages/CandidateAssessment";
+import CreateUser from "./pages/CreateUser";
+import { ProtectedRoute, ProtectedAdminRoute } from "./protectedRoute";
 
 export default function Routess() {
   return (
@@ -21,7 +23,7 @@ export default function Routess() {
       <Route path="*" element={<Navigate to="/404" />} />
       <Route path="/404" element={<Page404 />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<ProtectedRoute />}>
+      <Route path="/" element={<ProtectedAdminRoute />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="assessments" element={<Assessment />} />
         <Route path="user" element={<UserPage />} />
@@ -30,8 +32,12 @@ export default function Routess() {
         <Route path="results" element={<Results />} />
         <Route path="candidates" element={<Candidates />} />
         <Route path="candidates/create" element={<CreateCandidate />} />
+        <Route path="user/create" element={<CreateUser />} />
         <Route path="staffs/create" element={<CreateStaff />} />
         <Route path="staffs" element={<Staffs />} />
+      </Route>
+      <Route path="/" element={<ProtectedRoute />}>
+        <Route path="candidate/assessments" element={<CandidateStaff />} />
       </Route>
     </Routes>
   );

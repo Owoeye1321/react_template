@@ -48,13 +48,31 @@ export const get_assessments = async () => {
       return error;
    }
 };
+export const get_result = async () => {
+   try {
+      const { data } = await get(`${url}assessment/administration`);
+      if (data) { return data.data; }
+   } catch (error) {
+      return error;
+   }
+};
 
+export const get_assessments_by_candidate = async (assessment_id: string) => {
+   try {
+      const { data } = await get(`${url}assessment?group_id=${assessment_id}`);
+      if (data) { return data.data }
+   } catch (error) {
+      return error;
+   }
+};
+
+//assessment/administration
 export const create_assessment = async (assessment: any) => {
    try {
       const formData = new FormData();
       formData.append('title', assessment.title);
       formData.append('mode', assessment.mode);
-      formData.append('time_limit)', assessment.time_limit);
+      formData.append('time_limits', assessment.time_limit);
       formData.append('optionSchedule', assessment.optionSchedule);
       formData.append('essaySchedule', assessment.essaySchedule);
       formData.append('designation', assessment.designation);
@@ -70,6 +88,35 @@ export const get_users = async (type: string) => {
    try {
       const { data } = await get(`${url}auth/admin?role=${type}`);
       if (data.code === 200) { return data.data; }
+   } catch (error) {
+      return error;
+   }
+};
+
+export const create_bulk_user = async (payload: any) => {
+   try {
+      const formData = new FormData();
+      formData.append('file', payload.file);
+      const { data } = await post(`${url}auth/admin/create`, formData);
+      if (data.code === 200) { return true; }
+   } catch (error) {
+      return error;
+   }
+};
+
+export const create_single_user = async (payload: any) => {
+   try {
+      const { data } = await post(`${url}auth/admin/create`, payload);
+      if (data.code === 200) { return true; }
+   } catch (error) {
+      return error;
+   }
+};
+
+export const submit_assessment = async (payload: any) => {
+   try {
+      const { data } = await post(`${url}assessment/administration`, payload);
+      if (data.code === 200) { return true; }
    } catch (error) {
       return error;
    }

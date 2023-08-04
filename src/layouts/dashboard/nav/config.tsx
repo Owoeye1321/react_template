@@ -1,5 +1,5 @@
 // component
-import SvgColor from '../../../components/svg-color';
+import SvgColor from "../../../components/svg-color";
 
 // ----------------------------------------------------------------------
 
@@ -7,34 +7,53 @@ const icon = (name: string) => <SvgColor src={`/assets/icons/navbar/${name}.svg`
 
 const navConfig = [
   {
-    title: 'dashboard',
-    path: '/dashboard',
-    icon: icon('ic_dashboard'),
+    title: "dashboard",
+    path: "/dashboard",
+    icon: icon("ic_dashboard"),
+    isAdmin: true,
+    isCandidate: false,
   },
   {
-    title: 'assessments',
-    path: '/assessments',
-    icon: icon('ic_assessment'),
+    title: "assessments",
+    path: "/assessments",
+    icon: icon("ic_assessment"),
+    isAdmin: true,
+    isCandidate: false,
   },
   {
-    title: 'candidates',
-    path: '/candidates',
-    icon: icon('ic_candidate'),
+    title: "candidates",
+    path: "/candidates",
+    icon: icon("ic_candidate"),
+    isAdmin: true,
+    isCandidate: false,
   },
   {
-    title: 'Staffs',
-    path: '/staffs',
-    icon: icon('ic_staff'),
+    title: "Staffs",
+    path: "/staffs",
+    icon: icon("ic_staff"),
+    isAdmin: true,
+    isCandidate: false,
   },
   {
-    title: 'Results',
-    path: '/results',
-    icon: icon('ic_result'),
+    title: "Results",
+    path: "/results",
+    icon: icon("ic_result"),
+    isAdmin: true,
+    isCandidate: false,
   },
   {
-    title: 'Users',
-    path: '/user',
-    icon: icon('ic_users'),
+    title: "Users",
+    path: "/user",
+    icon: icon("ic_users"),
+    isAdmin: true,
+    isCandidate: false,
+  },
+  {
+    title: "assessment",
+    path: "/candidate/assessments",
+    icon: icon("ic_assessment"),
+    isAdmin: false,
+    isCandidate: true,
   },
 ];
 

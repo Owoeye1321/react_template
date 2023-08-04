@@ -27,7 +27,7 @@ import numeral from "numeral";
 import { UserListHead } from "../sections/@dashboard/user";
 import SvgColor from "../components/svg-color";
 import { useContexts } from "../context";
-import { create_assessment } from "../utils/api";
+import { create_bulk_user, create_single_user } from "../utils/api";
 
 export default function UserPage() {
   const navigate = useNavigate();
@@ -95,13 +95,10 @@ export default function UserPage() {
   const handleSubmit = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       e.preventDefault();
-      if (data.optionSchedule === null && data.essaySchedule === null) {
-        return alert("Please upload an objective sheet or theory");
-      }
       await set_loading(true);
-      const done = await create_assessment(data);
+      const done = await create_single_user({ ...data, role: "guest" });
       if (done) {
-        alert("Assessment created");
+        alert("User created");
         defaultState();
       }
       await set_loading(false);
@@ -109,7 +106,20 @@ export default function UserPage() {
       alert("An error occured");
     }
   };
-
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement> | any) => {
+    try {
+      e.preventDefault();
+      await set_loading(true);
+      const done = await create_bulk_user({ file: selectedFile });
+      if (done) {
+        alert("File uploaded");
+        cancelUpload();
+      }
+      await set_loading(false);
+    } catch (error) {
+      alert("An error occured");
+    }
+  };
   const defaultState = () => {
     setData({
       first_name: "",
@@ -147,7 +157,7 @@ export default function UserPage() {
     setSelectedFile(null);
     setCandidates([]);
   };
-  console.log(selectedFile);
+
   return (
     <>
       {" "}
@@ -263,13 +273,7 @@ export default function UserPage() {
                           extractCandidateData(e);
                         }}
                       />
-                      <Box
-                        item
-                        xs={12}
-                        sm={6}
-                        md={5}
-                        sx={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}
-                      >
+                      <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
                         <InputLabel
                           component="button"
                           sx={{
@@ -331,14 +335,8 @@ export default function UserPage() {
                         </Table>
                       </TableContainer>
                     </Box>
-                    <Box
-                      item
-                      xs={12}
-                      sm={6}
-                      md={5}
-                      sx={{ display: "flex", justifyContent: "space-between", margin: "15px" }}
-                    >
-                      <Button variant="contained">
+                    <Box sx={{ display: "flex", justifyContent: "space-between", margin: "15px" }}>
+                      <Button variant="contained" onClick={handleBulkUpload}>
                         Upload file{" "}
                         <Icon style={{ marginLeft: "10px" }} icon="material-symbols:upload" fontSize="20px" />
                       </Button>
