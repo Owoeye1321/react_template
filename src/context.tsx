@@ -1,8 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, useState } from "react";
 import { login, verifyToken, forgot_password, candidate_sign_up } from "./utils/api";
-import { toast, Slide } from "react-toastify";
-
-toast.configure();
 
 export enum Types {
   set_app_loaded = "SET_APP_LOADED",
@@ -32,7 +29,6 @@ const Context = createContext<{
   logoutUser: any;
   set_loading: any;
   registerUser: any;
-  notify: any;
 }>({
   state: initialState,
   dispatch: () => null,
@@ -40,7 +36,6 @@ const Context = createContext<{
   logoutUser: () => null,
   set_loading: () => null,
   registerUser: () => null,
-  notify: () => null,
 });
 
 export function useContexts() {
@@ -135,12 +130,10 @@ export function ContextProvider({ children }: any) {
     if (token_res && token_res.response && token_res.response.status === 401) {
       await set_loading(false);
       console.log("frjnr");
-      notify("error", "Incorrect Email/Password");
     } else {
       const user = await verifyToken();
       if (user && user.response && user.response.status === 401) {
         await dispatch({ type: Types.set_is_auth, payload: false });
-        notify("error", "Incorrect Email/Password");
       } else if (user && user.code !== "ERR_NETWORK" && user.name !== "AxiosError") {
         await dispatch({ type: Types.set_user, payload: user });
         await dispatch({ type: Types.set_is_auth, payload: true });
@@ -174,67 +167,6 @@ export function ContextProvider({ children }: any) {
     }
   };
 
-  const notify = (type: string, message: string) => {
-    switch (type) {
-      case "success": {
-        return toast.success(message, {
-          position: toast.POSITION.TOP_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: true,
-        });
-      }
-      case "error": {
-        return toast.error(message, {
-          position: toast.POSITION.TOP_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: true,
-        });
-      }
-      case "warning": {
-        return toast.warn(message, {
-          position: toast.POSITION.TOP_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: true,
-        });
-      }
-      case "inform": {
-        return toast.info(message, {
-          position: toast.POSITION.TOP_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: true,
-        });
-      }
-      case "errorDrop": {
-        return toast.error(message, {
-          position: toast.POSITION.BOTTOM_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: false,
-        });
-      }
-      case "successDrop": {
-        return toast.success(message, {
-          position: toast.POSITION.BOTTOM_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: false,
-        });
-      }
-      default: {
-        return toast.info(message, {
-          position: toast.POSITION.TOP_RIGHT,
-          theme: "colored",
-          transition: Slide,
-          hideProgressBar: true,
-        });
-      }
-    }
-  };
-
   const forgotPassword = async (email: String) => {
     await set_loading(true);
     await forgot_password(email);
@@ -254,7 +186,6 @@ export function ContextProvider({ children }: any) {
     set_loading,
     logoutUser,
     forgotPassword,
-    notify,
   };
 
   return <Context.Provider value={value}>{!loaded && children}</Context.Provider>;
