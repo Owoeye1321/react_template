@@ -1,6 +1,6 @@
 import { post, get } from '../components/axios';
 
-export const url = 'http://localhost:5002/api/v1/';
+export const url = process.env.REACT_APP_API_URL;
 
 export const login = async ({ email, password }: any) => {
    try {
