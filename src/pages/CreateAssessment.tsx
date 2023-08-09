@@ -228,7 +228,10 @@ export default function UserPage() {
           <Grid item xs={12} sm={6} md={6}>
             <InputLabel>
               Select objective questions excel file.{" "}
-              <Link href="https://test.co" target="_blank">
+              <Link
+                href="https://docs.google.com/spreadsheets/d/1og9xbuPVGfx4AlVRmS438OrwnIWDqbqQqwmx1Acl0ng/edit?usp=sharing"
+                target="_blank"
+              >
                 Sample upload
               </Link>
             </InputLabel>
@@ -257,7 +260,10 @@ export default function UserPage() {
           <Grid item xs={12} sm={6} md={6}>
             <InputLabel>
               Select theory questions excel file.{" "}
-              <Link href="https://test.co" target="_blank">
+              <Link
+                href="https://docs.google.com/spreadsheets/d/11LiRFg-Gh6C1I_FvkcKs7_jnLxmKydW8uzTwXExBwtM/edit?usp=sharing"
+                target="_blank"
+              >
                 Sample upload
               </Link>
             </InputLabel>

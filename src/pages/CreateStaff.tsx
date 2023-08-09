@@ -264,7 +264,10 @@ export default function UserPage() {
                     <Typography>Upload an Excel file with a list of staff</Typography>
                     <Typography>
                       Please make sure it matches the format specified in the{" "}
-                      <Link href="https://test.co" target="_blank">
+                      <Link
+                        href="https://docs.google.com/spreadsheets/d/1fOzhJkpJE2ot56M3Km9OBt-OGaH0mPAxR_yvj-J7RZo/edit?usp=sharing"
+                        target="_blank"
+                      >
                         Sample Excel File
                       </Link>
                       <input
