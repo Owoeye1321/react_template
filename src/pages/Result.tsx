@@ -30,7 +30,7 @@ import Scrollbar from "../components/scrollbar";
 import { useContexts } from "../context";
 // sections
 import { UserListHead, UserListToolbar, AssessmentListToolbar } from "../sections/@dashboard/user";
-import { get_result } from "../utils/api";
+import { get_results } from "../utils/api";
 // mock
 import USERLIST from "../_mock/user";
 
@@ -70,12 +70,7 @@ function applySortFilter(array: any, comparator: any, query: any) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(
-      array,
-      (_user) =>
-        _user.title.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
-        _user.designation.toLowerCase().indexOf(query.toLowerCase()) !== -1
-    );
+    return filter(array, (_user) => _user.title.toLowerCase().indexOf(query.toLowerCase()) !== -1);
   }
   return stabilizedThis.map((el: any) => el[0]);
 }
@@ -100,7 +95,7 @@ export default function UserPage() {
 
   const loadData = async () => {
     await set_loading(true);
-    const data = await get_result();
+    const data = await get_results();
     if (isArray(data)) {
       await set_assessment(data);
     }
@@ -203,15 +198,11 @@ export default function UserPage() {
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: any) => {
-                    const { _id, essay_score, objective_score, title, total_score } = row;
+                    const { _id, essay_score, objective_score, title, total_score, participant_id } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
 
                     return (
                       <TableRow hover key={_id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell>
-                          {/* <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, _id)} /> */}
-                        </TableCell>
-
                         <TableCell align="left">{title}</TableCell>
 
                         <TableCell align="left">{objective_score}</TableCell>
@@ -219,10 +210,18 @@ export default function UserPage() {
                         <TableCell align="left">{essay_score}</TableCell>
                         <TableCell align="left">{total_score}</TableCell>
 
-                        <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                            <Iconify icon="eva:more-vertical-fill" />
-                          </IconButton>
+                        <TableCell align="left">
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              navigate(
+                                { pathname: "/essay/score" },
+                                { state: { resultId: _id, participant_id: participant_id } }
+                              )
+                            }
+                          >
+                            Score Essay
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );

@@ -20,7 +20,7 @@ import {
   TableCell,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import * as xlsx from "xlsx";
 import { Icon } from "@iconify/react";
 import numeral from "numeral";
@@ -31,6 +31,7 @@ import { create_bulk_user, create_single_user } from "../utils/api";
 
 export default function UserPage() {
   const navigate = useNavigate();
+  const [notify]: any = useOutletContext();
   const [candidates, setCandidates] = useState<any>([]);
   const [activeTab, setActiveTab] = useState(0);
   const { set_loading } = useContexts();
@@ -98,12 +99,12 @@ export default function UserPage() {
       await set_loading(true);
       const done = await create_single_user({ ...data, role: "guest" });
       if (done) {
-        alert("User created");
+        notify("success", "User created");
         defaultState();
       }
       await set_loading(false);
     } catch (error) {
-      alert("An error occured");
+      notify("error", "An error occured");
     }
   };
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement> | any) => {
@@ -112,12 +113,12 @@ export default function UserPage() {
       await set_loading(true);
       const done = await create_bulk_user({ file: selectedFile });
       if (done) {
-        alert("File uploaded");
+        notify("success", "File uploaded");
         cancelUpload();
       }
       await set_loading(false);
     } catch (error) {
-      alert("An error occured");
+      notify("error", "An error occured");
     }
   };
   const defaultState = () => {

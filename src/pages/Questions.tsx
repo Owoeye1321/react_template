@@ -5,7 +5,7 @@ import { Grid, Container, Typography, Card, Box, TextareaAutosize, Modal, Avatar
 import { useContexts } from "../context";
 import { LoadingButton } from "@mui/lab";
 import numeral from "numeral";
-import { IQuestions } from "./CandidateAssessment";
+import { useOutletContext } from "react-router-dom";
 import { useState } from "react";
 import { submit_assessment } from "../utils/api";
 // ----------------------------------------------------------------------
@@ -22,6 +22,7 @@ export default function Questions({ questions, time, assessment_id, endAssessmen
   let [hours, setHour] = useState(time && time);
   const [assessmentData, setAssessmentData] = useState<any>({ group_id: "", objective: [], essay: [] });
   const [doneModal, setDoneModal] = useState(false);
+  const [notify]: any = useOutletContext();
 
   const generalStyle = {
     width: "100%",
@@ -69,23 +70,23 @@ export default function Questions({ questions, time, assessment_id, endAssessmen
       await setCurrentQuestion(currentQuestion + 1);
     }
     if (questions.length === currentQuestion + 1) {
-      await submitAssessment({ objective: obj, essay: essay });
+      await submitAssessment();
       await setStart(false);
     }
   };
 
-  const submitAssessment = async (data: any) => {
+  const submitAssessment = async () => {
     try {
       await set_loading(true);
       const done = await submit_assessment({ ...assessmentData, group_id: assessment_id });
       if (done) {
-        //alert("Assessment Submitted");
+        notify("success", "Assessment Submitted");
         setDoneModal(true);
         await setSelectedAnswer({ question: "", answer: "" });
       }
       await set_loading(false);
     } catch (error) {
-      alert("An error occured");
+      notify("error", "An error occured");
     }
   };
 
@@ -94,12 +95,12 @@ export default function Questions({ questions, time, assessment_id, endAssessmen
       await set_loading(true);
       const done = await submit_assessment({ ...assessmentData, group_id: assessment_id });
       if (done) {
-        alert("Assessment Submitted");
+        notify("success", "Assessment Submitted");
         await setSelectedAnswer({ question: "", answer: "" });
       }
       await set_loading(false);
     } catch (error) {
-      alert("An error occured");
+      notify("error", "An error occured");
     }
   };
 

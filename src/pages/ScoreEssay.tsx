@@ -11,37 +11,35 @@ import {
   Avatar,
   Button,
   Popover,
-  Checkbox,
+  Box,
   TableRow,
   MenuItem,
   TableBody,
   TableCell,
   Container,
   Typography,
-  IconButton,
+  TextField,
   TableContainer,
   TablePagination,
 } from "@mui/material";
 // components
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import Label from "../components/label";
 import Iconify from "../components/iconify";
 import Scrollbar from "../components/scrollbar";
 import { useContexts } from "../context";
 // sections
 import { UserListHead, UserListToolbar, AssessmentListToolbar } from "../sections/@dashboard/user";
-import { get_assessments } from "../utils/api";
+import { get_result, get_user, submit_essay_test } from "../utils/api";
 // mock
 import USERLIST from "../_mock/user";
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: "title", label: "Title", alignRight: false },
-  { id: "mode", label: "Mode", alignRight: false },
-  { id: "designation", label: "Designation", alignRight: false },
-  { id: "role", label: "Role", alignRight: false },
-  { id: "" },
+  { id: "question", label: "Question", alignRight: false },
+  { id: "answer", label: "Answer", alignRight: false },
+  { id: "inputscore", label: "Score", alignRight: false },
 ];
 
 // ----------------------------------------------------------------------
@@ -70,25 +68,20 @@ function applySortFilter(array: any, comparator: any, query: any) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(
-      array,
-      (_user) =>
-        _user.title.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
-        _user.designation.toLowerCase().indexOf(query.toLowerCase()) !== -1
-    );
+    return filter(array, (_user) => _user.title.toLowerCase().indexOf(query.toLowerCase()) !== -1);
   }
   return stabilizedThis.map((el: any) => el[0]);
 }
 
 export default function UserPage() {
   const [open, setOpen] = useState(null);
-  const [notify]: any = useOutletContext();
+
   const [page, setPage] = useState(0);
 
   const [order, setOrder] = useState("asc");
-
+  const [candidate, set_candidate] = useState<any>({ first_name: "", last_name: "" });
   const [selected, setSelected] = useState<any>([]);
-
+  const [total_score, set_total_score] = useState<any>([]);
   const [orderBy, setOrderBy] = useState("name");
 
   const [filterName, setFilterName] = useState("");
@@ -97,17 +90,33 @@ export default function UserPage() {
   const [assessment, set_assessment] = useState<any>([]);
   const { set_loading } = useContexts();
   const navigate = useNavigate();
+  const [notify]: any = useOutletContext();
+  const location = useLocation();
+  const { resultId, participant_id } = location.state;
 
-  const loadData = async () => {
-    await set_loading(true);
-    const data = await get_assessments();
-    if (isArray(data)) {
-      await set_assessment(data);
+  const getData = async () => {
+    try {
+      set_loading(true);
+      const candidate_data = await get_user(participant_id);
+      const results = await get_result(resultId);
+      await set_candidate(candidate_data);
+      await set_assessment(results && results.essay && results.essay);
+      await set_total_score(
+        results &&
+          results.essay &&
+          results.essay.map((i: any) => {
+            i.score = 0;
+            return { _id: i._id, score: 0 };
+          })
+      );
+      await set_loading(false);
+    } catch (error) {
+      console.log(error);
     }
-    await set_loading(false);
   };
+
   useEffect(() => {
-    loadData();
+    getData();
   }, []);
 
   const handleOpenMenu = (event: any) => {
@@ -168,34 +177,92 @@ export default function UserPage() {
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
+  const onChangeScore = (score: any, id: any) => {
+    if (score) {
+      set_total_score(
+        total_score.map((i: any) => {
+          if (i._id === id) {
+            i.score = parseFloat(score);
+          }
+          return i;
+        })
+      );
+    } else {
+      set_total_score(
+        total_score.map((i: any) => {
+          if (i._id === id) {
+            i.score = 0;
+          }
+          return i;
+        })
+      );
+    }
+  };
+
+  const eachValue = (id: string) => {
+    return total_score.find((i: any) => i._id === id).score;
+  };
+  const handle_submit = async () => {
+    try {
+      await set_loading(true);
+      const total = total_score
+        .map((i: any) => {
+          return i.score;
+        })
+        .reduce((a: number, b: number) => a + b, 0);
+      const res = await submit_essay_test({ administration_id: resultId, essay_score: total });
+      if (res) {
+        notify("success", "Essay marked success");
+        navigate(-1);
+      }
+    } catch (error) {
+      notify("error", "An error occurred");
+      await set_loading(false);
+    }
+  };
+
   return (
     <>
       <Helmet>
-        <title> Assessments </title>
+        <title> Results </title>
       </Helmet>
 
+      <Box
+        sx={{
+          width: "20px",
+          height: "20px",
+          bgcolor: "transparent",
+          border: "transparent",
+          cursor: "pointer",
+          marginBottom: "10px",
+        }}
+        component="button"
+        onClick={() => navigate(-1)}
+      >
+        <Avatar src="/assets/icons/ic_back.svg" alt="photoURL" />
+      </Box>
       <Container sx={{ minHeight: "100vh", height: "100%" }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Assessments
+            {candidate.first_name + " " + candidate.last_name}
           </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/assessments/create")}
-            startIcon={<Iconify icon="eva:plus-fill" />}
-          >
-            New Assessment
-          </Button>
+
+          <Box sx={{ display: "flex" }}>
+            <Typography variant="h5" sx={{ marginRight: "20px" }}>
+              {total_score
+                .map((i: any) => {
+                  return i.score;
+                })
+                .reduce((a: number, b: number) => a + b, 0)}{" "}
+              marks
+            </Typography>
+            <Button variant="outlined" onClick={handle_submit}>
+              Submit
+            </Button>
+          </Box>
         </Stack>
 
         <Card>
-          <AssessmentListToolbar
-            numSelected={selected.length}
-            filterName={filterName}
-            onFilterName={handleFilterByName}
-            placeHolder="Search assessments...."
-          />
-
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
@@ -210,22 +277,23 @@ export default function UserPage() {
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: any) => {
-                    const { _id, designation, mode, title, role } = row;
+                    const { _id, question, answer } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
 
                     return (
                       <TableRow hover key={_id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell align="left">{title}</TableCell>
-
-                        <TableCell align="left">{mode}</TableCell>
-
-                        <TableCell align="left">{designation}</TableCell>
-                        <TableCell align="left">{role}</TableCell>
-
-                        <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                            <Iconify icon="eva:more-vertical-fill" />
-                          </IconButton>
+                        <TableCell align="left">{question}</TableCell>
+                        <TableCell align="left">{answer}</TableCell>
+                        <TableCell align="left">
+                          <TextField
+                            type="number"
+                            //value={eachValue(_id)}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                              onChangeScore(e.target.value, _id)
+                            }
+                            sx={{ width: "20%" }}
+                            variant="outlined"
+                          />{" "}
                         </TableCell>
                       </TableRow>
                     );

@@ -19,9 +19,9 @@ export default function NavSection({ data, ...other }: any) {
   return (
     <Box {...other}>
       <List disablePadding sx={{ p: 1 }}>
-        {data.map((item: any) => {
-          return <NavItem key={item.title} item={item} />;
-        })}
+        {data.map((item: any) => (
+          <NavItem key={item.title} item={item} />
+        ))}
       </List>
     </Box>
   );

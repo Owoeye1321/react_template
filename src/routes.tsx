@@ -1,8 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import React from "react";
+import * as React from "react";
 import UserPage from "./pages/UserPage";
 import Page404 from "./pages/Page404";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/Register";
 import ProductsPage from "./pages/ProductsPage";
 import Dashboard from "./pages/DashboardAppPage";
 import Assessment from "./pages/Assessment";
@@ -12,6 +13,7 @@ import CreateStaff from "./pages/CreateStaff";
 import Candidates from "./pages/Candidates";
 import Results from "./pages/Result";
 import Staffs from "./pages/Staff";
+import ScoreEssay from "./pages/ScoreEssay";
 import CandidateStaff from "./pages/CandidateAssessment";
 import CreateUser from "./pages/CreateUser";
 import { ProtectedRoute, ProtectedAdminRoute } from "./protectedRoute";
@@ -23,6 +25,7 @@ export default function Routess() {
       <Route path="*" element={<Navigate to="/404" />} />
       <Route path="/404" element={<Page404 />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<RegisterPage />} />
       <Route path="/" element={<ProtectedAdminRoute />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="assessments" element={<Assessment />} />
@@ -35,6 +38,7 @@ export default function Routess() {
         <Route path="user/create" element={<CreateUser />} />
         <Route path="staffs/create" element={<CreateStaff />} />
         <Route path="staffs" element={<Staffs />} />
+        <Route path="essay/score" element={<ScoreEssay />} />
       </Route>
       <Route path="/" element={<ProtectedRoute />}>
         <Route path="candidate/assessments" element={<CandidateStaff />} />

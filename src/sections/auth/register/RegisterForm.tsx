@@ -1,23 +1,22 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // @mui
-import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box } from "@mui/material";
+import { Stack, IconButton, InputAdornment, TextField, Checkbox, Box, MenuItem, Snackbar } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import Snackbar from "@mui/material/Snackbar";
 import { useContexts } from "../../../context";
-// components
-import Iconify from "../../../components/iconify";
-
+import { Link } from "react-router-dom";
 import MuiAlert, { AlertProps, AlertColor } from "@mui/material/Alert";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
+// components
+import Iconify from "../../../components/iconify";
 
 // ----------------------------------------------------------------------
 
-export default function LoginForm() {
-  const navigate = useNavigate();
+export default function RegisterForm() {
+  const designations = ["Accountant", "Software Engineer", "Human Resource"];
 
   const [alertMessage, setAlertMessage] = useState("Alert");
   const [type, setType] = useState<AlertColor>("success");
@@ -34,31 +33,45 @@ export default function LoginForm() {
     await setAlertOpen(true);
   };
 
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const {
     loginUser,
     state: { loading },
     set_loading,
+    registerUser,
   } = useContexts();
-  const [data, setData] = useState({ email: "", password: "" });
+  const [data, setData] = useState({
+    first_name: "",
+    last_name: "",
+    designation: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+  });
 
   const handleSubmit = async (e: any) => {
     try {
       e.preventDefault();
-      const user = await loginUser(data);
-      if (!user) {
-        notify("error", "Invalid Email/Password");
+      await set_loading(true);
+      if (data.password.length < 8) {
+        notify("warning", "password cannot be less than 8 characters");
+        await set_loading(false);
         return;
       }
-      if (user.login && user.role === "admin") {
-        await navigate("/dashboard");
-      } else {
+      if (data.password !== data.confirm_password) {
+        notify("warning", "password does not match");
+        await set_loading(false);
+        return;
+      }
+      const res = await registerUser({ ...data, role: "guest" });
+      if (res) {
         await navigate("/candidate/assessments");
       }
       await set_loading(false);
     } catch (error) {
-      notify("error", "An error occurred");
       await set_loading(false);
     }
   };
@@ -67,7 +80,22 @@ export default function LoginForm() {
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={3}>
         <TextField
+          name="text"
+          label="First name"
+          required
+          value={data.first_name}
+          onChange={(e) => setData({ ...data, first_name: e.target.value })}
+        />
+        <TextField
+          name="text"
+          label="Last name"
+          required
+          value={data.last_name}
+          onChange={(e) => setData({ ...data, last_name: e.target.value })}
+        />
+        <TextField
           name="email"
+          type="email"
           label="Email address"
           required
           value={data.email}
@@ -75,33 +103,44 @@ export default function LoginForm() {
         />
 
         <TextField
+          select // tell TextField to render select
+          value={data.designation}
+          label="Designation"
+          required
+          sx={{ width: "100%" }}
+          onChange={(e) => setData({ ...data, designation: e.target.value })}
+        >
+          {designations.map((i) => (
+            <MenuItem key={i} value={i}>
+              {i}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
           name="password"
           label="Password"
+          type="password"
           required
           value={data.password}
           onChange={(e) => setData({ ...data, password: e.target.value })}
-          type={showPassword ? "text" : "password"}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? "eva:eye-fill" : "eva:eye-off-fill"} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
+        />
+        <TextField
+          name="confirmpassword"
+          label="Confirm Password"
+          type="password"
+          required
+          value={data.confirm_password}
+          onChange={(e) => setData({ ...data, confirm_password: e.target.value })}
         />
       </Stack>
 
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
         <Checkbox name="remember" />
-        <Link variant="subtitle2" underline="hover">
-          Forgot password?
-        </Link>
+        <Link to="/login">Login</Link>
       </Stack>
 
       <LoadingButton fullWidth size="large" type="submit" variant="contained" loading={loading}>
-        Login
+        Sign Up
       </LoadingButton>
 
       <Snackbar

@@ -14,7 +14,7 @@ import {
   Button,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import * as xlsx from "xlsx";
 import numeral from "numeral";
 import { useContexts } from "../context";
@@ -22,6 +22,7 @@ import { create_assessment } from "../utils/api";
 
 export default function UserPage() {
   const navigate = useNavigate();
+  const [notify]: any = useOutletContext();
   const [objectives, setObjectives] = useState<any>([]);
   const [theory, setTheory] = useState<any>([]);
   const [openObjective, setOpenObjective] = useState(false);
@@ -114,17 +115,17 @@ export default function UserPage() {
     try {
       e.preventDefault();
       if (data.optionSchedule === null && data.essaySchedule === null) {
-        return alert("Please upload an objective sheet or theory");
+        return notify("success", "Please upload an objective sheet or theory");
       }
       await set_loading(true);
       const done = await create_assessment(data);
       if (done) {
-        alert("Assessment created");
+        notify("success", "Assessment created");
         defaultState();
       }
       await set_loading(false);
     } catch (error) {
-      alert("An error occured");
+      notify("success", "Could not create assessment");
     }
   };
 

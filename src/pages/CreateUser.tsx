@@ -1,12 +1,13 @@
 import { Container, Typography, TextField, Grid, MenuItem, Avatar, Box, Button } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { useContexts } from "../context";
 import { create_single_user } from "../utils/api";
 
 export default function UserPage() {
   const navigate = useNavigate();
   const { set_loading } = useContexts();
+  const [notify]: any = useOutletContext();
   const designations = [
     { name: "Accountant", value: "Accountant" },
     { name: "Software Engineer", value: "Software Engineer" },
@@ -43,12 +44,12 @@ export default function UserPage() {
       await set_loading(true);
       const done = await create_single_user({ ...data, role: "admin" });
       if (done) {
-        alert("User created");
+        notify("success", "User created");
         defaultState();
       }
       await set_loading(false);
     } catch (error) {
-      alert("An error occured");
+      notify("error", "An error occurred");
     }
   };
 

@@ -48,15 +48,35 @@ export const get_assessments = async () => {
       return error;
    }
 };
-export const get_result = async () => {
+
+export const get_results = async () => {
    try {
-      const { data } = await get(`${url}assessment/administration`);
+      const { data } = await get(`${url}assessment/admin/administration`);
       if (data) { return data.data; }
    } catch (error) {
       return error;
    }
 };
 
+export const get_result = async (administration_id: string) => {
+   try {
+      const { data } = await get(`${url}assessment/admin/administration?administration_id=${administration_id}`);
+      if (data) { return data.data; }
+   } catch (error) {
+      return error;
+   }
+};
+
+
+export const candidate_sign_up = async (payload: any) => {
+   try {
+      const { data } = await post(`${url}auth/register`, payload);
+      if (data.success) { await localStorage.setItem('zer', data.token); }
+      return data.token;
+   } catch (error) {
+      return error;
+   }
+};
 export const get_assessments_by_candidate = async (assessment_id: string) => {
    try {
       const { data } = await get(`${url}assessment?group_id=${assessment_id}`);
@@ -66,7 +86,7 @@ export const get_assessments_by_candidate = async (assessment_id: string) => {
    }
 };
 
-//assessment/administration
+
 export const create_assessment = async (assessment: any) => {
    try {
       const formData = new FormData();
@@ -87,6 +107,15 @@ export const create_assessment = async (assessment: any) => {
 export const get_users = async (type: string) => {
    try {
       const { data } = await get(`${url}auth/admin?role=${type}`);
+      if (data.code === 200) { return data.data; }
+   } catch (error) {
+      return error;
+   }
+};
+
+export const get_user = async (id: string) => {
+   try {
+      const { data } = await get(`${url}auth/admin?user_id=${id}`);
       if (data.code === 200) { return data.data; }
    } catch (error) {
       return error;
@@ -116,6 +145,15 @@ export const create_single_user = async (payload: any) => {
 export const submit_assessment = async (payload: any) => {
    try {
       const { data } = await post(`${url}assessment/administration`, payload);
+      if (data.code === 200) { return true; }
+   } catch (error) {
+      return error;
+   }
+};
+
+export const submit_essay_test = async (payload: any) => {
+   try {
+      const { data } = await post(`${url}assessment/admin/score-essay`, payload);
       if (data.code === 200) { return true; }
    } catch (error) {
       return error;

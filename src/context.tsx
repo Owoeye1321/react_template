@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useReducer, useState } from "react";
-import { login, verifyToken, forgot_password } from "./utils/api";
+import { login, verifyToken, forgot_password, candidate_sign_up } from "./utils/api";
+import { toast, Slide } from "react-toastify";
+
+toast.configure();
 
 export enum Types {
   set_app_loaded = "SET_APP_LOADED",
@@ -64,16 +67,22 @@ export function ContextProvider({ children }: any) {
   const [loaded, set_loaded] = useState(true);
 
   const check_login = async () => {
-    if (!localStorage.getItem("zer")) return;
+    if (!localStorage.getItem("zer")) {
+      await set_loaded(false);
+
+      return;
+    }
     const user = await verifyToken();
-    await set_loaded(false);
     if (user && user.response && user.response.status === 401) {
       await dispatch({ type: Types.set_is_auth, payload: false });
+      await set_loaded(false);
     } else if (user && user.code !== "ERR_NETWORK" && user.name !== "AxiosError") {
       await dispatch({ type: Types.set_user, payload: user });
       await dispatch({ type: Types.set_is_auth, payload: true });
+      await set_loaded(false);
     } else {
       await dispatch({ type: Types.set_is_auth, payload: false });
+      await set_loaded(false);
     }
   };
 
@@ -125,6 +134,29 @@ export function ContextProvider({ children }: any) {
     const token_res = await login({ email, password });
     if (token_res && token_res.response && token_res.response.status === 401) {
       await set_loading(false);
+      console.log("frjnr");
+      notify("error", "Incorrect Email/Password");
+    } else {
+      const user = await verifyToken();
+      if (user && user.response && user.response.status === 401) {
+        await dispatch({ type: Types.set_is_auth, payload: false });
+        notify("error", "Incorrect Email/Password");
+      } else if (user && user.code !== "ERR_NETWORK" && user.name !== "AxiosError") {
+        await dispatch({ type: Types.set_user, payload: user });
+        await dispatch({ type: Types.set_is_auth, payload: true });
+        return { login: true, role: user.role };
+      } else {
+        await dispatch({ type: Types.set_is_auth, payload: false });
+      }
+      await set_loading(false);
+    }
+  };
+
+  const registerUser = async (data: any) => {
+    await set_loading(true);
+    const token_res = await candidate_sign_up(data);
+    if (token_res && token_res.response && token_res.response.status === 401) {
+      await set_loading(false);
       //  notify("error", "Incorrect Email/Password");
     } else {
       const user = await verifyToken();
@@ -142,13 +174,67 @@ export function ContextProvider({ children }: any) {
     }
   };
 
-  const registerUser = () => {
-    console.log("done");
+  const notify = (type: string, message: string) => {
+    switch (type) {
+      case "success": {
+        return toast.success(message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: true,
+        });
+      }
+      case "error": {
+        return toast.error(message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: true,
+        });
+      }
+      case "warning": {
+        return toast.warn(message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: true,
+        });
+      }
+      case "inform": {
+        return toast.info(message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: true,
+        });
+      }
+      case "errorDrop": {
+        return toast.error(message, {
+          position: toast.POSITION.BOTTOM_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: false,
+        });
+      }
+      case "successDrop": {
+        return toast.success(message, {
+          position: toast.POSITION.BOTTOM_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: false,
+        });
+      }
+      default: {
+        return toast.info(message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored",
+          transition: Slide,
+          hideProgressBar: true,
+        });
+      }
+    }
   };
 
-  const notify = (data: string) => {
-    alert(data);
-  };
   const forgotPassword = async (email: String) => {
     await set_loading(true);
     await forgot_password(email);
