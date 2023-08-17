@@ -30,13 +30,15 @@ import { useContexts } from "../context";
 import { create_single_user, create_bulk_user } from "../utils/api";
 
 export default function UserPage() {
-  const { set_loading } = useContexts();
+  const {
+    set_loading,
+    state: { designations },
+  } = useContexts();
   const [notify]: any = useOutletContext();
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedFile, setSelectedFile] = useState<any>(null);
-  const designations = ["Accountant", "Software Engineer", "Human Resource"];
   const [page, setPage] = useState(0);
 
   const [order, setOrder] = useState("asc");
@@ -234,8 +236,8 @@ export default function UserPage() {
                   onChange={(e) => onChange(e.target.value, "designation")}
                 >
                   {designations.map((i) => (
-                    <MenuItem key={i} value={i}>
-                      {i}
+                    <MenuItem key={i.name} value={i.name}>
+                      {i.name}
                     </MenuItem>
                   ))}
                 </TextField>

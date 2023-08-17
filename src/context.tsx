@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useReducer, useState } from "react";
-import { login, verifyToken, forgot_password, candidate_sign_up } from "./utils/api";
+import { login, verifyToken, forgot_password, candidate_sign_up, get_designations } from "./utils/api";
+import { isArray } from "lodash";
 
 export enum Types {
   set_app_loaded = "SET_APP_LOADED",
   set_user = "SET_USER",
   set_is_auth = "SET_IS_AUTH",
   set_loading = "SET_LOADING",
+  set_designations = "SET_DESIGNATIONS",
 }
 
 type InitialStateType = {
@@ -13,6 +15,7 @@ type InitialStateType = {
   isAuth: boolean;
   app_loaded: boolean;
   loading: boolean;
+  designations: Array<any>;
 };
 
 const initialState = {
@@ -20,6 +23,7 @@ const initialState = {
   isAuth: false,
   app_loaded: true,
   loading: false,
+  designations: [],
 };
 
 const Context = createContext<{
@@ -50,6 +54,8 @@ function reducer(state: any, action: any) {
       return { ...state, app_loaded: action.payload };
     case Types.set_is_auth:
       return { ...state, isAuth: action.payload };
+    case Types.set_designations:
+      return { ...state, designations: action.payload };
     case Types.set_loading:
       return { ...state, loading: action.payload };
     default:
@@ -61,10 +67,21 @@ export function ContextProvider({ children }: any) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [loaded, set_loaded] = useState(true);
 
+  const getDesignations = async () => {
+    try {
+      const data = await get_designations();
+      if (isArray(data)) {
+        await dispatch({ type: Types.set_designations, payload: data });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const check_login = async () => {
     if (!localStorage.getItem("zer")) {
       await set_loaded(false);
-
+      await getDesignations();
       return;
     }
     const user = await verifyToken();
@@ -79,6 +96,8 @@ export function ContextProvider({ children }: any) {
       await dispatch({ type: Types.set_is_auth, payload: false });
       await set_loaded(false);
     }
+    await set_loaded(false);
+    await getDesignations();
   };
 
   useEffect(() => {
@@ -148,22 +167,16 @@ export function ContextProvider({ children }: any) {
   const registerUser = async (data: any) => {
     await set_loading(true);
     const token_res = await candidate_sign_up(data);
-    if (token_res && token_res.response && token_res.response.status === 401) {
+    console.log(token_res.response);
+    if (token_res && token_res.success) {
       await set_loading(false);
-      //  notify("error", "Incorrect Email/Password");
+      return { success: true, message: "Account created" };
+    } else if (token_res && token_res.response && token_res.response.status === 400) {
+      await set_loading(false);
+      return { success: false, message: "Email already exist, please verify" };
     } else {
-      const user = await verifyToken();
-      if (user && user.response && user.response.status === 401) {
-        await dispatch({ type: Types.set_is_auth, payload: false });
-        // notify("error", "Incorrect Email/Password");
-      } else if (user && user.code !== "ERR_NETWORK" && user.name !== "AxiosError") {
-        await dispatch({ type: Types.set_user, payload: user });
-        await dispatch({ type: Types.set_is_auth, payload: true });
-        return { login: true, role: user.role };
-      } else {
-        await dispatch({ type: Types.set_is_auth, payload: false });
-      }
       await set_loading(false);
+      return { success: false, message: "Could not create account" };
     }
   };
 

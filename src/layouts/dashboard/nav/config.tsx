@@ -28,6 +28,13 @@ const navConfig = [
     isCandidate: false,
   },
   {
+    title: "candidates request",
+    path: "/candidates-request",
+    icon: icon("ic_candidate"),
+    isAdmin: true,
+    isCandidate: false,
+  },
+  {
     title: "Staffs",
     path: "/staffs",
     icon: icon("ic_staff"),
@@ -45,6 +52,13 @@ const navConfig = [
     title: "Users",
     path: "/user",
     icon: icon("ic_users"),
+    isAdmin: true,
+    isCandidate: false,
+  },
+  {
+    title: "Designation",
+    path: "/designation",
+    icon: icon("ic_result"),
     isAdmin: true,
     isCandidate: false,
   },

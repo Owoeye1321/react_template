@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { filter, isArray } from "lodash";
+import EditUser from "./EditUser";
 import { sentenceCase } from "change-case";
 // @mui
 import {
@@ -8,7 +9,8 @@ import {
   Table,
   Stack,
   Paper,
-  Avatar,
+  Box,
+  Modal,
   Button,
   Popover,
   Checkbox,
@@ -23,16 +25,14 @@ import {
   TablePagination,
 } from "@mui/material";
 // components
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import Label from "../components/label";
 import Iconify from "../components/iconify";
 import Scrollbar from "../components/scrollbar";
 import { useContexts } from "../context";
 // sections
 import { UserListHead, AssessmentListToolbar } from "../sections/@dashboard/user";
-import { get_users } from "../utils/api";
-// mock
-import USERLIST from "../_mock/user";
+import { get_users, update_user } from "../utils/api";
 
 // ----------------------------------------------------------------------
 
@@ -83,9 +83,9 @@ function applySortFilter(array: any, comparator: any, query: any) {
 
 export default function UserPage() {
   const [open, setOpen] = useState(null);
-
+  const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(0);
-
+  const [notify]: any = useOutletContext();
   const [order, setOrder] = useState("asc");
 
   const [selected, setSelected] = useState<any>([]);
@@ -95,15 +95,50 @@ export default function UserPage() {
   const [filterName, setFilterName] = useState("");
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [staffs, set_staffs] = useState<any>([]);
+  const [candidates, set_candidates] = useState<any>([]);
   const { set_loading } = useContexts();
   const navigate = useNavigate();
+
+  const [data, setData] = useState<any>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    designation: "",
+    _id: "",
+  });
+  const onChange = (datas: any, type: string) => {
+    switch (type) {
+      case "first_name":
+        return setData({ ...data, first_name: datas });
+      case "last_name":
+        return setData({ ...data, last_name: datas });
+      case "email":
+        return setData({ ...data, email: datas });
+      case "role":
+        return setData({ ...data, role: datas });
+      case "designation":
+        return setData({ ...data, designation: datas });
+      default:
+        return setData(data);
+    }
+  };
+
+  const defaultState = () => {
+    setData({
+      first_name: "",
+      last_name: "",
+      email: "",
+      _id: "",
+      designation: "",
+    });
+  };
 
   const loadData = async () => {
     await set_loading(true);
     const data = await get_users("user");
     if (isArray(data)) {
-      await set_staffs(data);
+      console.group(data);
+      await set_candidates(data);
     }
     await set_loading(false);
   };
@@ -111,12 +146,14 @@ export default function UserPage() {
     loadData();
   }, []);
 
-  const handleOpenMenu = (event: any) => {
+  const handleOpenMenu = (event: any, staff: any) => {
     setOpen(event.currentTarget);
+    setData(staff);
   };
 
   const handleCloseMenu = () => {
     setOpen(null);
+    defaultState();
   };
 
   const handleRequestSort = (event: any, property: any) => {
@@ -127,7 +164,7 @@ export default function UserPage() {
 
   const handleSelectAllClick = (event: any) => {
     if (event.target.checked) {
-      const newSelecteds = staffs.map((n: any) => n.name);
+      const newSelecteds = candidates.map((n: any) => n.name);
       setSelected(newSelecteds);
       return;
     }
@@ -148,11 +185,38 @@ export default function UserPage() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - staffs.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - candidates.length) : 0;
 
-  const filteredUsers = applySortFilter(staffs, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(candidates, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
+
+  const close = () => {
+    setModalOpen(false);
+  };
+
+  const handleUpdate = async (e: React.ChangeEvent<HTMLInputElement> | any) => {
+    try {
+      e.preventDefault();
+      await set_loading(true);
+      const done = await update_user(data._id, data);
+      if (done) {
+        await loadData();
+        await notify("success", "User updated");
+        await defaultState();
+        await setModalOpen(false);
+      } else {
+        await notify("error", "Could not update user");
+        await set_loading(false);
+      }
+    } catch (error) {
+      notify("error", "An error occured");
+    }
+  };
+  const handleOpenModal = async (staff: any) => {
+    await setData(staff);
+    await setModalOpen(true);
+  };
 
   return (
     <>
@@ -181,7 +245,6 @@ export default function UserPage() {
             onFilterName={handleFilterByName}
             placeHolder="Search staffs...."
           />
-
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
@@ -189,7 +252,7 @@ export default function UserPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={staffs.length}
+                  rowCount={candidates.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
@@ -209,7 +272,11 @@ export default function UserPage() {
                         <TableCell align="left">Staff</TableCell>
 
                         <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <IconButton
+                            size="large"
+                            color="inherit"
+                            onClick={(e) => handleOpenMenu(e, { first_name, last_name, designation, email, _id })}
+                          >
                             <Iconify icon="eva:more-vertical-fill" />
                           </IconButton>
                         </TableCell>
@@ -258,7 +325,7 @@ export default function UserPage() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={staffs.length}
+            count={candidates.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -285,16 +352,35 @@ export default function UserPage() {
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={() => setModalOpen(true)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
         </MenuItem>
-
-        <MenuItem sx={{ color: "error.main" }}>
-          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
-        </MenuItem>
       </Popover>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => {
+          defaultState();
+          setModalOpen(false);
+          handleCloseMenu();
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box
+          sx={{
+            width: { lg: "40%", md: "60%", sm: "100%", xs: "100%" },
+            minHeight: "40vh",
+            margin: "auto",
+            backgroundColor: "#fff",
+            overflow: "scroll",
+            marginTop: "10%",
+          }}
+        >
+          <EditUser staff={data} handleSubmit={handleUpdate} onChange={onChange} close={close} />
+        </Box>
+      </Modal>
     </>
   );
 }

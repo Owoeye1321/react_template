@@ -6,13 +6,11 @@ import { create_single_user } from "../utils/api";
 
 export default function UserPage() {
   const navigate = useNavigate();
-  const { set_loading } = useContexts();
+  const {
+    set_loading,
+    state: { designations },
+  } = useContexts();
   const [notify]: any = useOutletContext();
-  const designations = [
-    { name: "Accountant", value: "Accountant" },
-    { name: "Software Engineer", value: "Software Engineer" },
-    { name: "Human Resource", value: "Human Resource" },
-  ];
 
   const [data, setData] = useState({
     first_name: "",

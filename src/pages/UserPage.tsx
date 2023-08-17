@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { filter, isArray } from "lodash";
+import EditUser from "./EditUser";
 import { sentenceCase } from "change-case";
 // @mui
 import {
@@ -8,7 +9,8 @@ import {
   Table,
   Stack,
   Paper,
-  Avatar,
+  Box,
+  Modal,
   Button,
   Popover,
   Checkbox,
@@ -23,14 +25,14 @@ import {
   TablePagination,
 } from "@mui/material";
 // components
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import Label from "../components/label";
 import Iconify from "../components/iconify";
 import Scrollbar from "../components/scrollbar";
 import { useContexts } from "../context";
 // sections
 import { UserListHead, AssessmentListToolbar } from "../sections/@dashboard/user";
-import { get_users } from "../utils/api";
+import { get_users, update_user } from "../utils/api";
 
 // ----------------------------------------------------------------------
 
@@ -44,7 +46,7 @@ const TABLE_HEAD = [
 
 // ----------------------------------------------------------------------
 
-function descendingComparator(a, b, orderBy) {
+function descendingComparator(a: any, b: any, orderBy: any) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -54,15 +56,15 @@ function descendingComparator(a, b, orderBy) {
   return 0;
 }
 
-function getComparator(order, orderBy) {
+function getComparator(order: any, orderBy: any) {
   return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
+    ? (a: any, b: any) => descendingComparator(a, b, orderBy)
+    : (a: any, b: any) => -descendingComparator(a, b, orderBy);
 }
 
-function applySortFilter(array, comparator, query) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
-  stabilizedThis.sort((a, b) => {
+function applySortFilter(array: any, comparator: any, query: any) {
+  const stabilizedThis = array.map((el: any, index: any) => [el, index]);
+  stabilizedThis.sort((a: any, b: any) => {
     const order = comparator(a[0], b[0]);
     if (order !== 0) return order;
     return a[1] - b[1];
@@ -76,26 +78,60 @@ function applySortFilter(array, comparator, query) {
         _user.email.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   }
-  return stabilizedThis.map((el) => el[0]);
+  return stabilizedThis.map((el: any) => el[0]);
 }
 
 export default function UserPage() {
   const [open, setOpen] = useState(null);
-
+  const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(0);
-
+  const [notify]: any = useOutletContext();
   const [order, setOrder] = useState("asc");
 
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState<any>([]);
 
   const [orderBy, setOrderBy] = useState("name");
 
   const [filterName, setFilterName] = useState("");
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [candidates, set_candidates] = useState([]);
+  const [candidates, set_candidates] = useState<any>([]);
   const { set_loading } = useContexts();
   const navigate = useNavigate();
+
+  const [data, setData] = useState<any>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    designation: "",
+    _id: "",
+  });
+  const onChange = (datas: any, type: string) => {
+    switch (type) {
+      case "first_name":
+        return setData({ ...data, first_name: datas });
+      case "last_name":
+        return setData({ ...data, last_name: datas });
+      case "email":
+        return setData({ ...data, email: datas });
+      case "role":
+        return setData({ ...data, role: datas });
+      case "designation":
+        return setData({ ...data, designation: datas });
+      default:
+        return setData(data);
+    }
+  };
+
+  const defaultState = () => {
+    setData({
+      first_name: "",
+      last_name: "",
+      email: "",
+      _id: "",
+      designation: "",
+    });
+  };
 
   const loadData = async () => {
     await set_loading(true);
@@ -110,39 +146,41 @@ export default function UserPage() {
     loadData();
   }, []);
 
-  const handleOpenMenu = (event) => {
+  const handleOpenMenu = (event: any, staff: any) => {
     setOpen(event.currentTarget);
+    setData(staff);
   };
 
   const handleCloseMenu = () => {
     setOpen(null);
+    defaultState();
   };
 
-  const handleRequestSort = (event, property) => {
+  const handleRequestSort = (event: any, property: any) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event) => {
+  const handleSelectAllClick = (event: any) => {
     if (event.target.checked) {
-      const newSelecteds = candidates.map((n) => n.name);
+      const newSelecteds = candidates.map((n: any) => n.name);
       setSelected(newSelecteds);
       return;
     }
     setSelected([]);
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (event: any, newPage: any) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const handleChangeRowsPerPage = (event: any) => {
     setPage(0);
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleFilterByName = (event) => {
+  const handleFilterByName = (event: any) => {
     setPage(0);
     setFilterName(event.target.value);
   };
@@ -153,10 +191,37 @@ export default function UserPage() {
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
+  const close = () => {
+    setModalOpen(false);
+  };
+
+  const handleUpdate = async (e: React.ChangeEvent<HTMLInputElement> | any) => {
+    try {
+      e.preventDefault();
+      await set_loading(true);
+      const done = await update_user(data._id, data);
+      if (done) {
+        await loadData();
+        await notify("success", "User updated");
+        await defaultState();
+        await setModalOpen(false);
+      } else {
+        await notify("error", "Could not update user");
+        await set_loading(false);
+      }
+    } catch (error) {
+      notify("error", "An error occured");
+    }
+  };
+  const handleOpenModal = async (staff: any) => {
+    await setData(staff);
+    await setModalOpen(true);
+  };
+
   return (
     <>
       <Helmet>
-        <title> Users </title>
+        <title> Team Members </title>
       </Helmet>
 
       <Container sx={{ minHeight: "100vh", height: "100%" }}>
@@ -178,7 +243,7 @@ export default function UserPage() {
             numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-            placeHolder="Search users...."
+            placeHolder="Search user...."
           />
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
@@ -193,7 +258,7 @@ export default function UserPage() {
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: any) => {
                     const { _id, designation, first_name, last_name, email, role } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
 
@@ -207,7 +272,11 @@ export default function UserPage() {
                         <TableCell align="left">Admin</TableCell>
 
                         <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <IconButton
+                            size="large"
+                            color="inherit"
+                            onClick={(e) => handleOpenMenu(e, { first_name, last_name, designation, email, _id })}
+                          >
                             <Iconify icon="eva:more-vertical-fill" />
                           </IconButton>
                         </TableCell>
@@ -283,16 +352,35 @@ export default function UserPage() {
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={() => setModalOpen(true)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
         </MenuItem>
-
-        <MenuItem sx={{ color: "error.main" }}>
-          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
-        </MenuItem>
       </Popover>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => {
+          defaultState();
+          setModalOpen(false);
+          handleCloseMenu();
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box
+          sx={{
+            width: { lg: "40%", md: "60%", sm: "100%", xs: "100%" },
+            minHeight: "40vh",
+            margin: "auto",
+            backgroundColor: "#fff",
+            overflow: "scroll",
+            marginTop: "10%",
+          }}
+        >
+          <EditUser staff={data} handleSubmit={handleUpdate} onChange={onChange} close={close} />
+        </Box>
+      </Modal>
     </>
   );
 }

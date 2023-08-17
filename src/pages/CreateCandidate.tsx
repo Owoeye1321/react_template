@@ -34,9 +34,11 @@ export default function UserPage() {
   const [notify]: any = useOutletContext();
   const [candidates, setCandidates] = useState<any>([]);
   const [activeTab, setActiveTab] = useState(0);
-  const { set_loading } = useContexts();
+  const {
+    set_loading,
+    state: { designations },
+  } = useContexts();
   const [selectedFile, setSelectedFile] = useState<any>(null);
-  const designations = ["Accountant", "Software Engineer", "Human Resource"];
   const [page, setPage] = useState(0);
 
   const [order, setOrder] = useState("asc");
@@ -232,8 +234,8 @@ export default function UserPage() {
                   onChange={(e) => onChange(e.target.value, "designation")}
                 >
                   {designations.map((i) => (
-                    <MenuItem key={i} value={i}>
-                      {i}
+                    <MenuItem key={i.name} value={i.name}>
+                      {i.name}
                     </MenuItem>
                   ))}
                 </TextField>

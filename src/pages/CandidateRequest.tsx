@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { filter, isArray } from "lodash";
-import EditUser from "./EditUser";
 import { sentenceCase } from "change-case";
 // @mui
 import {
@@ -9,11 +8,10 @@ import {
   Table,
   Stack,
   Paper,
-  Box,
-  Modal,
+  Avatar,
   Button,
   Popover,
-  Checkbox,
+  Modal,
   TableRow,
   MenuItem,
   TableBody,
@@ -23,6 +21,7 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  Box,
 } from "@mui/material";
 // components
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -30,10 +29,12 @@ import Label from "../components/label";
 import Iconify from "../components/iconify";
 import Scrollbar from "../components/scrollbar";
 import { useContexts } from "../context";
+import { userRole } from "../utils/usertype";
 // sections
+import ReviewCandidate from "./ReviewCandidate";
 import { UserListHead, AssessmentListToolbar } from "../sections/@dashboard/user";
-import { get_users, update_user } from "../utils/api";
-
+import { get_in_active_users, approve_candidate } from "../utils/api";
+const url = process.env.REACT_APP_API_URL;
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -45,6 +46,20 @@ const TABLE_HEAD = [
 ];
 
 // ----------------------------------------------------------------------
+
+export interface Candidate {
+  _id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  status: boolean;
+  role: string;
+  designation: string;
+  isAdmin: boolean;
+  file_path: string;
+  isActive: boolean;
+  createdAt: Date;
+}
 
 function descendingComparator(a: any, b: any, orderBy: any) {
   if (b[orderBy] < a[orderBy]) {
@@ -91,7 +106,19 @@ export default function UserPage() {
   const [selected, setSelected] = useState<any>([]);
 
   const [orderBy, setOrderBy] = useState("name");
-
+  const [staff, setStaff] = useState<Candidate>({
+    _id: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    status: false,
+    role: "",
+    designation: "",
+    isAdmin: false,
+    file_path: "",
+    isActive: false,
+    createdAt: new Date(),
+  });
   const [filterName, setFilterName] = useState("");
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -99,45 +126,11 @@ export default function UserPage() {
   const { set_loading } = useContexts();
   const navigate = useNavigate();
 
-  const [data, setData] = useState<any>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    designation: "",
-    _id: "",
-  });
-  const onChange = (datas: any, type: string) => {
-    switch (type) {
-      case "first_name":
-        return setData({ ...data, first_name: datas });
-      case "last_name":
-        return setData({ ...data, last_name: datas });
-      case "email":
-        return setData({ ...data, email: datas });
-      case "role":
-        return setData({ ...data, role: datas });
-      case "designation":
-        return setData({ ...data, designation: datas });
-      default:
-        return setData(data);
-    }
-  };
-
-  const defaultState = () => {
-    setData({
-      first_name: "",
-      last_name: "",
-      email: "",
-      _id: "",
-      designation: "",
-    });
-  };
-
   const loadData = async () => {
     await set_loading(true);
-    const data = await get_users("guest");
+    const data = await get_in_active_users();
+
     if (isArray(data)) {
-      console.group(data);
       await set_candidates(data);
     }
     await set_loading(false);
@@ -146,14 +139,13 @@ export default function UserPage() {
     loadData();
   }, []);
 
-  const handleOpenMenu = (event: any, staff: any) => {
-    setOpen(event.currentTarget);
-    setData(staff);
+  const handleOpenModal = async (staff: Candidate) => {
+    await setStaff(staff);
+    await setModalOpen(true);
   };
 
   const handleCloseMenu = () => {
     setOpen(null);
-    defaultState();
   };
 
   const handleRequestSort = (event: any, property: any) => {
@@ -191,31 +183,44 @@ export default function UserPage() {
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
+  const approve = async () => {
+    try {
+      await set_loading(true);
+      const res = await approve_candidate(staff._id);
+      if (res.code === 200) {
+        await notify("success", "Candidate approval successful");
+        await loadData();
+        await defaultState();
+      } else {
+        await notify("error", "Candidate approval error");
+        await set_loading(false);
+      }
+    } catch (error) {
+      console.log(error);
+      notify("error", "An error occurred");
+      await set_loading(false);
+    }
+  };
+
   const close = () => {
     setModalOpen(false);
   };
 
-  const handleUpdate = async (e: React.ChangeEvent<HTMLInputElement> | any) => {
-    try {
-      e.preventDefault();
-      await set_loading(true);
-      const done = await update_user(data._id, data);
-      if (done) {
-        await loadData();
-        await notify("success", "User updated");
-        await defaultState();
-        await setModalOpen(false);
-      } else {
-        await notify("error", "Could not update user");
-        await set_loading(false);
-      }
-    } catch (error) {
-      notify("error", "An error occured");
-    }
-  };
-  const handleOpenModal = async (staff: any) => {
-    await setData(staff);
-    await setModalOpen(true);
+  const defaultState = () => {
+    setStaff({
+      _id: "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      status: false,
+      role: "",
+      designation: "",
+      isAdmin: false,
+      file_path: "",
+      isActive: false,
+      createdAt: new Date(),
+    });
+    close();
   };
 
   return (
@@ -227,15 +232,15 @@ export default function UserPage() {
       <Container sx={{ minHeight: "100vh", height: "100%" }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Candidates
+            Candidates Request
           </Typography>
-          <Button
+          {/*<Button
             variant="contained"
             onClick={() => navigate("/candidates/create")}
             startIcon={<Iconify icon="eva:plus-fill" />}
           >
             New Candidate
-          </Button>
+          </Button>*/}
         </Stack>
 
         <Card>
@@ -258,27 +263,32 @@ export default function UserPage() {
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: any) => {
-                    const { _id, designation, first_name, last_name, email, role } = row;
+                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: Candidate) => {
+                    const { _id, designation, first_name, last_name, email, role, file_path } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
 
                     return (
                       <TableRow hover key={_id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell align="left">{`${first_name} ${last_name}`}</TableCell>
+                        <TableCell align="left">
+                          <Box display="flex" alignItems="center">
+                            <Avatar
+                              src={file_path}
+                              sx={{ width: "50px", height: "50px", marginRight: "10px" }}
+                              alt="img"
+                            />
+                            {`${first_name} ${last_name}`}
+                          </Box>
+                        </TableCell>
 
                         <TableCell align="left">{email}</TableCell>
 
                         <TableCell align="left">{designation}</TableCell>
-                        <TableCell align="left">Candidate</TableCell>
+                        <TableCell align="left">{userRole(role)}</TableCell>
 
                         <TableCell align="right">
-                          <IconButton
-                            size="large"
-                            color="inherit"
-                            onClick={(e) => handleOpenMenu(e, { first_name, last_name, designation, email, _id })}
-                          >
-                            <Iconify icon="eva:more-vertical-fill" />
-                          </IconButton>
+                          <Button variant="outlined" onClick={() => handleOpenModal(row)}>
+                            Review
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -352,9 +362,14 @@ export default function UserPage() {
           },
         }}
       >
-        <MenuItem onClick={() => setModalOpen(true)}>
+        <MenuItem>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
+        </MenuItem>
+
+        <MenuItem sx={{ color: "error.main" }}>
+          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
+          Delete
         </MenuItem>
       </Popover>
 
@@ -362,8 +377,6 @@ export default function UserPage() {
         open={modalOpen}
         onClose={() => {
           defaultState();
-          setModalOpen(false);
-          handleCloseMenu();
         }}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
@@ -378,7 +391,7 @@ export default function UserPage() {
             marginTop: "10%",
           }}
         >
-          <EditUser staff={data} handleSubmit={handleUpdate} onChange={onChange} close={close} />
+          <ReviewCandidate staff={staff} close={close} approve={approve} />
         </Box>
       </Modal>
     </>

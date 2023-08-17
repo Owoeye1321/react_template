@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { filter, isArray } from "lodash";
-import EditUser from "./EditUser";
+import CreateDesignation from "./CreateDesignation";
+import moment from "moment";
 import { sentenceCase } from "change-case";
 // @mui
 import {
@@ -32,15 +33,13 @@ import Scrollbar from "../components/scrollbar";
 import { useContexts } from "../context";
 // sections
 import { UserListHead, AssessmentListToolbar } from "../sections/@dashboard/user";
-import { get_users, update_user } from "../utils/api";
+import { get_designations, update_user, create_designation, edit_designation } from "../utils/api";
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: "nam", label: "Name", alignRight: false },
-  { id: "email", label: "Email", alignRight: false },
   { id: "designation", label: "Designation", alignRight: false },
-  { id: "role", label: "Role", alignRight: false },
+  { id: "date", label: "Added Date", alignRight: false },
   { id: "" },
 ];
 
@@ -70,13 +69,7 @@ function applySortFilter(array: any, comparator: any, query: any) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(
-      array,
-      (_user) =>
-        _user.first_name.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
-        _user.last_name.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
-        _user.email.toLowerCase().indexOf(query.toLowerCase()) !== -1
-    );
+    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
   }
   return stabilizedThis.map((el: any) => el[0]);
 }
@@ -87,7 +80,7 @@ export default function UserPage() {
   const [page, setPage] = useState(0);
   const [notify]: any = useOutletContext();
   const [order, setOrder] = useState("asc");
-
+  const [edit, setEdit] = useState(false);
   const [selected, setSelected] = useState<any>([]);
 
   const [orderBy, setOrderBy] = useState("name");
@@ -95,29 +88,18 @@ export default function UserPage() {
   const [filterName, setFilterName] = useState("");
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [candidates, set_candidates] = useState<any>([]);
+  const [designations, set_designations] = useState<any>([]);
   const { set_loading } = useContexts();
   const navigate = useNavigate();
 
   const [data, setData] = useState<any>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    designation: "",
+    name: "",
     _id: "",
   });
   const onChange = (datas: any, type: string) => {
     switch (type) {
-      case "first_name":
-        return setData({ ...data, first_name: datas });
-      case "last_name":
-        return setData({ ...data, last_name: datas });
-      case "email":
-        return setData({ ...data, email: datas });
-      case "role":
-        return setData({ ...data, role: datas });
       case "designation":
-        return setData({ ...data, designation: datas });
+        return setData({ ...data, name: datas });
       default:
         return setData(data);
     }
@@ -125,35 +107,38 @@ export default function UserPage() {
 
   const defaultState = () => {
     setData({
-      first_name: "",
-      last_name: "",
-      email: "",
+      name: "",
       _id: "",
-      designation: "",
     });
   };
 
   const loadData = async () => {
     await set_loading(true);
-    const data = await get_users("guest");
+    const data = await get_designations();
     if (isArray(data)) {
-      console.group(data);
-      await set_candidates(data);
+      await set_designations(data);
     }
     await set_loading(false);
   };
+
   useEffect(() => {
     loadData();
   }, []);
 
-  const handleOpenMenu = (event: any, staff: any) => {
-    setOpen(event.currentTarget);
-    setData(staff);
+  const handleOpenMenu = async (event: any, staff: any) => {
+    try {
+      setEdit(true);
+      setOpen(event.currentTarget);
+      setData(staff);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleCloseMenu = () => {
     setOpen(null);
     defaultState();
+    setEdit(false);
   };
 
   const handleRequestSort = (event: any, property: any) => {
@@ -164,7 +149,7 @@ export default function UserPage() {
 
   const handleSelectAllClick = (event: any) => {
     if (event.target.checked) {
-      const newSelecteds = candidates.map((n: any) => n.name);
+      const newSelecteds = designations.map((n: any) => n.name);
       setSelected(newSelecteds);
       return;
     }
@@ -185,9 +170,9 @@ export default function UserPage() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - candidates.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - designations.length) : 0;
 
-  const filteredUsers = applySortFilter(candidates, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(designations, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
@@ -199,15 +184,28 @@ export default function UserPage() {
     try {
       e.preventDefault();
       await set_loading(true);
-      const done = await update_user(data._id, data);
-      if (done) {
-        await loadData();
-        await notify("success", "User updated");
-        await defaultState();
-        await setModalOpen(false);
+      if (edit) {
+        const done = await edit_designation(data._id, data);
+        if (done && done.code === 200) {
+          await notify("success", "Designation Updated");
+          await loadData();
+          await defaultState();
+          await setModalOpen(false);
+        } else {
+          await notify("error", "Designation already exist");
+          await set_loading(false);
+        }
       } else {
-        await notify("error", "Could not update user");
-        await set_loading(false);
+        const done = await create_designation({ name: data.name });
+        if (done && done.code === 200) {
+          await notify("success", "Designation Created");
+          await loadData();
+          await defaultState();
+          await setModalOpen(false);
+        } else {
+          await notify("error", "Designation already exist");
+          await set_loading(false);
+        }
       }
     } catch (error) {
       notify("error", "An error occured");
@@ -221,20 +219,16 @@ export default function UserPage() {
   return (
     <>
       <Helmet>
-        <title> Candidates </title>
+        <title> Designation </title>
       </Helmet>
 
       <Container sx={{ minHeight: "100vh", height: "100%" }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Candidates
+            Designation
           </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/candidates/create")}
-            startIcon={<Iconify icon="eva:plus-fill" />}
-          >
-            New Candidate
+          <Button variant="contained" onClick={() => setModalOpen(true)} startIcon={<Iconify icon="eva:plus-fill" />}>
+            New Designation
           </Button>
         </Stack>
 
@@ -243,7 +237,7 @@ export default function UserPage() {
             numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-            placeHolder="Search candidates...."
+            placeHolder="Search designations...."
           />
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
@@ -252,31 +246,24 @@ export default function UserPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={candidates.length}
+                  rowCount={designations.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: any) => {
-                    const { _id, designation, first_name, last_name, email, role } = row;
+                    const { _id, name, createdAt } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
 
                     return (
                       <TableRow hover key={_id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell align="left">{`${first_name} ${last_name}`}</TableCell>
+                        <TableCell align="left">{name}</TableCell>
 
-                        <TableCell align="left">{email}</TableCell>
-
-                        <TableCell align="left">{designation}</TableCell>
-                        <TableCell align="left">Candidate</TableCell>
+                        <TableCell align="left">{moment(createdAt).format("DD-MMMM-YYYY")}</TableCell>
 
                         <TableCell align="right">
-                          <IconButton
-                            size="large"
-                            color="inherit"
-                            onClick={(e) => handleOpenMenu(e, { first_name, last_name, designation, email, _id })}
-                          >
+                          <IconButton size="large" color="inherit" onClick={(e) => handleOpenMenu(e, { name, _id })}>
                             <Iconify icon="eva:more-vertical-fill" />
                           </IconButton>
                         </TableCell>
@@ -325,7 +312,7 @@ export default function UserPage() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={candidates.length}
+            count={designations.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -364,6 +351,7 @@ export default function UserPage() {
           defaultState();
           setModalOpen(false);
           handleCloseMenu();
+          setEdit(false);
         }}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
@@ -371,14 +359,14 @@ export default function UserPage() {
         <Box
           sx={{
             width: { lg: "40%", md: "60%", sm: "100%", xs: "100%" },
-            minHeight: "40vh",
+            minHeight: "20vh",
             margin: "auto",
             backgroundColor: "#fff",
             overflow: "scroll",
             marginTop: "10%",
           }}
         >
-          <EditUser staff={data} handleSubmit={handleUpdate} onChange={onChange} close={close} />
+          <CreateDesignation data={data} handleSubmit={handleUpdate} onChange={onChange} close={close} edit={edit} />
         </Box>
       </Modal>
     </>

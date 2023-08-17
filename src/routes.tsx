@@ -11,8 +11,10 @@ import CreateAssessment from "./pages/CreateAssessment";
 import CreateCandidate from "./pages/CreateCandidate";
 import CreateStaff from "./pages/CreateStaff";
 import Candidates from "./pages/Candidates";
+import CandidatesRequest from "./pages/CandidateRequest";
 import Results from "./pages/Result";
 import Staffs from "./pages/Staff";
+import Designation from "./pages/Designations";
 import ScoreEssay from "./pages/ScoreEssay";
 import CandidateStaff from "./pages/CandidateAssessment";
 import CreateUser from "./pages/CreateUser";
@@ -35,9 +37,11 @@ export default function Routess() {
         <Route path="results" element={<Results />} />
         <Route path="candidates" element={<Candidates />} />
         <Route path="candidates/create" element={<CreateCandidate />} />
+        <Route path="candidates-request" element={<CandidatesRequest />} />
         <Route path="user/create" element={<CreateUser />} />
         <Route path="staffs/create" element={<CreateStaff />} />
         <Route path="staffs" element={<Staffs />} />
+        <Route path="designation" element={<Designation />} />
         <Route path="essay/score" element={<ScoreEssay />} />
       </Route>
       <Route path="/" element={<ProtectedRoute />}>

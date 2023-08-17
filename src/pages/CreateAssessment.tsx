@@ -26,9 +26,11 @@ export default function UserPage() {
   const [objectives, setObjectives] = useState<any>([]);
   const [theory, setTheory] = useState<any>([]);
   const [openObjective, setOpenObjective] = useState(false);
-  const { set_loading } = useContexts();
+  const {
+    set_loading,
+    state: { designations },
+  } = useContexts();
   const [openTheory, setOpenTheory] = useState(false);
-  const designations = ["Accountant", "Software Engineer", "Human Resource"];
   const [data, setData] = useState({
     title: "",
     type: "",
@@ -219,8 +221,8 @@ export default function UserPage() {
               onChange={(e) => onChange(e.target.value, "designation")}
             >
               {designations.map((i) => (
-                <MenuItem key={i} value={i}>
-                  {i}
+                <MenuItem key={i.name} value={i.name}>
+                  {i.name}
                 </MenuItem>
               ))}
             </TextField>

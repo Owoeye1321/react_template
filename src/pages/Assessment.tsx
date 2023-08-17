@@ -41,7 +41,7 @@ const TABLE_HEAD = [
   { id: "mode", label: "Mode", alignRight: false },
   { id: "designation", label: "Designation", alignRight: false },
   { id: "role", label: "Role", alignRight: false },
-  { id: "" },
+  //{ id: "" },
 ];
 
 // ----------------------------------------------------------------------
@@ -222,11 +222,11 @@ export default function UserPage() {
                         <TableCell align="left">{designation}</TableCell>
                         <TableCell align="left">{role}</TableCell>
 
-                        <TableCell align="right">
+                        {/*<TableCell align="right">
                           <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
                             <Iconify icon="eva:more-vertical-fill" />
                           </IconButton>
-                        </TableCell>
+                        </TableCell>*/}
                       </TableRow>
                     );
                   })}

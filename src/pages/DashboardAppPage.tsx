@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { faker } from "@faker-js/faker";
-import React from "react";
+import React, { useEffect, useState } from "react";
 // @mui
 import { useTheme } from "@mui/material/styles";
 import { Grid, Container, Typography } from "@mui/material";
@@ -8,11 +8,59 @@ import { Grid, Container, Typography } from "@mui/material";
 import Iconify from "../components/iconify";
 // sections
 import { AppCurrentVisits, AppWebsiteVisits, AppWidgetSummary } from "../sections/@dashboard/app";
+import { useContexts } from "../context";
+import { get_dashboard_data } from "../utils/api";
 
 // ----------------------------------------------------------------------
 
+interface assessmentTaken {
+  assessmentTaken: number;
+  month: string;
+  year: string | number;
+}
+export interface DashboardPage {
+  users: {
+    candidates: number;
+    staffs: number;
+  };
+  assessment: {
+    totalAssessment: number;
+    totalObjectives: number;
+    totalEssay: number;
+    pastTakenAssessment: Array<assessmentTaken>;
+  };
+}
+
 export default function DashboardAppPage() {
+  const [data, setData] = useState<DashboardPage>({
+    users: {
+      candidates: 0,
+      staffs: 0,
+    },
+    assessment: {
+      totalAssessment: 0,
+      totalObjectives: 0,
+      totalEssay: 0,
+      pastTakenAssessment: [],
+    },
+  });
+  const { set_loading } = useContexts();
   const theme = useTheme();
+
+  const loadData = async () => {
+    try {
+      await set_loading(true);
+      const data: DashboardPage = await get_dashboard_data();
+      setData(data);
+      await set_loading(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   return (
     <>
@@ -27,50 +75,46 @@ export default function DashboardAppPage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Candidates" total={714000} icon="mdi:account-arrow-down" />
+            <AppWidgetSummary title="Candidates" total={data.users.candidates} icon="mdi:account-arrow-down" />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Assessments" total={1352831} color="info" icon="mdi:application-edit" />
+            <AppWidgetSummary
+              title="Assessments"
+              total={data.assessment.totalAssessment}
+              color="info"
+              icon="mdi:application-edit"
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Questions" total={1723315} color="warning" icon="raphael:question" />
+            <AppWidgetSummary
+              title="Questions"
+              total={data.assessment.totalObjectives + data.assessment.totalEssay}
+              color="warning"
+              icon="raphael:question"
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Staffs" total={234} color="error" icon="mdi:account-check" />
+            <AppWidgetSummary title="Staffs" total={data.users.staffs} color="error" icon="mdi:account-check" />
           </Grid>
 
           <Grid item xs={12} md={6} lg={8}>
             <AppWebsiteVisits
               title="Assessment Taken"
               subheader="List of assessment taken for the last 12 months"
-              chartLabels={[
-                "01/01/2023",
-                "02/01/2023",
-                "03/01/2023",
-                "04/01/2023",
-                "05/01/2023",
-                "06/01/2023",
-                "07/01/2023",
-                "08/01/2023",
-                "09/01/2023",
-                "10/01/2023",
-                "11/01/2023",
-              ]}
+              chartLabels={data.assessment.pastTakenAssessment.map((i) => {
+                return `01/${i.month}/${i.year}`;
+              })}
               chartData={[
                 {
-                  name: "Staff",
-                  type: "column",
-                  fill: "solid",
-                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                },
-                {
-                  name: "Candidates",
+                  name: "Assessment",
                   type: "area",
                   fill: "gradient",
-                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
+                  data: data.assessment.pastTakenAssessment.map((i) => {
+                    return i.assessmentTaken;
+                  }),
                 },
               ]}
             />

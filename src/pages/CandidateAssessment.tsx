@@ -54,7 +54,7 @@ export default function Assessment() {
     try {
       await set_loading(true);
       const data = await get_assessments_by_candidate(selected_assessment);
-      if (!selected_assessment) {
+      if (!selected_assessment && data && data.length) {
         setAssessment(data);
       } else {
         const arr = shuffle([...data.optionAssessment, ...data.essayAssessment]);

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // @mui
-import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box } from "@mui/material";
+import { Stack, IconButton, InputAdornment, TextField, Checkbox, Box } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
+import { Link } from "react-router-dom";
 import Snackbar from "@mui/material/Snackbar";
 import { useContexts } from "../../../context";
 // components
@@ -95,8 +96,8 @@ export default function LoginForm() {
 
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
         <Checkbox name="remember" />
-        <Link variant="subtitle2" underline="hover">
-          Forgot password?
+        <Link to="/signup" style={{ textDecoration: "none", color: "#2065D1" }}>
+          Sign up
         </Link>
       </Stack>
 

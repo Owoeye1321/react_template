@@ -7,6 +7,7 @@ import { Box, Link, Button, Drawer, Typography, Avatar, Stack } from "@mui/mater
 // mock
 import account from "../../../_mock/account";
 // hooks
+import { userRole } from "../../../utils/usertype";
 import { useContexts } from "../../../context";
 import useResponsive from "../../../hooks/useResponsive";
 // components
@@ -69,7 +70,7 @@ export default function Nav({ openNav, onCloseNav }: any) {
               </Typography>
 
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {user.role}
+                {userRole(user.role)}
               </Typography>
             </Box>
           </StyledAccount>
