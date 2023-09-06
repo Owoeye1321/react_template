@@ -15,6 +15,8 @@ import CandidatesRequest from "./pages/CandidateRequest";
 import Results from "./pages/Result";
 import Staffs from "./pages/Staff";
 import Designation from "./pages/Designations";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ScoreEssay from "./pages/ScoreEssay";
 import CandidateStaff from "./pages/CandidateAssessment";
 import CreateUser from "./pages/CreateUser";
@@ -28,6 +30,8 @@ export default function Routess() {
       <Route path="/404" element={<Page404 />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/forgot-password/reset" element={<ResetPassword />} />
       <Route path="/" element={<ProtectedAdminRoute />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="assessments" element={<Assessment />} />

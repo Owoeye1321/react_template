@@ -10,7 +10,7 @@ import { useContexts } from "../../../context";
 import Iconify from "../../../components/iconify";
 
 import MuiAlert, { AlertProps, AlertColor } from "@mui/material/Alert";
-
+import { forgot_password } from "../../../utils/api";
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
@@ -18,8 +18,6 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props,
 // ----------------------------------------------------------------------
 
 export default function LoginForm() {
-  const navigate = useNavigate();
-
   const [alertMessage, setAlertMessage] = useState("Alert");
   const [type, setType] = useState<AlertColor>("success");
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
@@ -35,27 +33,22 @@ export default function LoginForm() {
     await setAlertOpen(true);
   };
 
-  const [showPassword, setShowPassword] = useState(false);
-
   const {
-    loginUser,
     state: { loading },
     set_loading,
   } = useContexts();
-  const [data, setData] = useState({ email: "", password: "" });
+  const [data, setData] = useState({ email: "" });
 
   const handleSubmit = async (e: any) => {
     try {
       e.preventDefault();
-      const user = await loginUser(data);
-      if (!user) {
-        notify("error", "Invalid Email/Password");
-        return;
-      }
-      if (user.login && user.role === "admin") {
-        await navigate("/dashboard");
+      await set_loading(true);
+      const res = await forgot_password(data.email);
+      if (res.code === 200) {
+        await notify("success", "Reset password email sent");
+        setData({ ...data, email: "" });
       } else {
-        await navigate("/candidate/assessments");
+        await notify("error", res.message);
       }
       await set_loading(false);
     } catch (error) {
@@ -74,37 +67,19 @@ export default function LoginForm() {
           value={data.email}
           onChange={(e) => setData({ ...data, email: e.target.value })}
         />
-
-        <TextField
-          name="password"
-          label="Password"
-          required
-          value={data.password}
-          onChange={(e) => setData({ ...data, password: e.target.value })}
-          type={showPassword ? "text" : "password"}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? "eva:eye-fill" : "eva:eye-off-fill"} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
       </Stack>
 
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
         <Link to="/signup" style={{ textDecoration: "none", color: "#2065D1" }}>
-          Sign up
+          No account?
         </Link>
-        <Link to="/forgot-password" style={{ textDecoration: "none", color: "#2065D1" }}>
-          Forgot password
+        <Link to="/login" style={{ textDecoration: "none", color: "#2065D1" }}>
+          Login
         </Link>
       </Stack>
 
       <LoadingButton fullWidth size="large" type="submit" variant="contained" loading={loading}>
-        Login
+        Get Reset Link
       </LoadingButton>
 
       <Snackbar
