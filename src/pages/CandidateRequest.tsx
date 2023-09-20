@@ -34,7 +34,7 @@ import { userRole } from "../utils/usertype";
 import ReviewCandidate from "./ReviewCandidate";
 import { UserListHead, AssessmentListToolbar } from "../sections/@dashboard/user";
 import { get_in_active_users, approve_candidate } from "../utils/api";
-const url = process.env.REACT_APP_API_URL;
+const url = "http://localhost:5002/";
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -140,7 +140,7 @@ export default function UserPage() {
   }, []);
 
   const handleOpenModal = async (staff: Candidate) => {
-    await setStaff(staff);
+    await setStaff({ ...staff, file_path: url?.slice(0, -1) + staff.file_path });
     await setModalOpen(true);
   };
 
@@ -266,13 +266,12 @@ export default function UserPage() {
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row: Candidate) => {
                     const { _id, designation, first_name, last_name, email, role, file_path } = row;
                     const selectedUser = selected.indexOf(_id) !== -1;
-
                     return (
                       <TableRow hover key={_id} tabIndex={-1} role="checkbox" selected={selectedUser}>
                         <TableCell align="left">
                           <Box display="flex" alignItems="center">
                             <Avatar
-                              src={file_path}
+                              src={url?.slice(0, -1) + file_path}
                               sx={{ width: "50px", height: "50px", marginRight: "10px" }}
                               alt="img"
                             />
