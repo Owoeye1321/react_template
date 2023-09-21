@@ -34,7 +34,7 @@ import { userRole } from "../utils/usertype";
 import ReviewCandidate from "./ReviewCandidate";
 import { UserListHead, AssessmentListToolbar } from "../sections/@dashboard/user";
 import { get_in_active_users, approve_candidate } from "../utils/api";
-const url = "http://localhost:5002/";
+const url = process.env.REACT_APP_IMAGE_URL;
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -140,7 +140,7 @@ export default function UserPage() {
   }, []);
 
   const handleOpenModal = async (staff: Candidate) => {
-    await setStaff({ ...staff, file_path: url?.slice(0, -1) + staff.file_path });
+    await setStaff({ ...staff, file_path: url + staff.file_path });
     await setModalOpen(true);
   };
 
@@ -271,7 +271,7 @@ export default function UserPage() {
                         <TableCell align="left">
                           <Box display="flex" alignItems="center">
                             <Avatar
-                              src={url?.slice(0, -1) + file_path}
+                              src={url + file_path}
                               sx={{ width: "50px", height: "50px", marginRight: "10px" }}
                               alt="img"
                             />
